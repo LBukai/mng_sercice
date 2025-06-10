@@ -8,6 +8,7 @@ import authApiService from '@/services/authApi';
 import { apiService } from '@/services/api';
 import { User } from '@/types/user';
 import { UserProject } from '@/types/userProject';
+import { setApiLoggingOutState } from '@/services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -18,6 +19,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   getUserId: () => string | null;
+  isLoggingOut: boolean; // New flag to track logout state
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -29,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   isAuthenticated: false,
   getUserId: () => null,
+  isLoggingOut: false, // Default value for the new flag
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -41,10 +44,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProjects, setUserProjects] = useState<UserProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // Add the new state
   const router = useRouter();
   const { showAlert } = useAlert();
 
+  useEffect(() => {
+    // Update the API service's logging out state whenever isLoggingOut changes
+    setApiLoggingOutState(isLoggingOut);
+  }, [isLoggingOut]);
+
   const fetchUserData = async () => {
+    // Skip fetching if we're in the process of logging out
+    if (isLoggingOut) return;
+    
     try {
       setIsLoading(true);
       const userId = authApiService.getUserIdFromToken();
@@ -74,15 +86,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
-    // Check if user is logged in
-    const isLoggedIn = authApiService.isAuthenticated();
-    
-    if (isLoggedIn) {
-      fetchUserData();
-    } else {
-      setIsLoading(false);
+    // Check if user is logged in, but skip if we're logging out
+    if (!isLoggingOut) {
+      const isLoggedIn = authApiService.isAuthenticated();
+      
+      if (isLoggedIn) {
+        fetchUserData();
+      } else {
+        setIsLoading(false);
+      }
     }
-  }, []);
+  }, [isLoggingOut]); // Add isLoggingOut as a dependency
 
   const login = async (username: string, password: string) => {
     try {
@@ -112,6 +126,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = () => {
+    // Set the logging out flag to prevent further API calls
+    setIsLoggingOut(true);
+    
     // Clear tokens and user
     authApiService.clearTokens();
     setUser(null);
@@ -120,9 +137,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Redirect to login page
     router.push('/login');
     showAlert('info', 'You have been logged out');
+    
+    // Reset the logging out flag after navigation (optional, depends on your needs)
+    // You can either reset it immediately or after a short timeout
+    setTimeout(() => {
+      setIsLoggingOut(false);
+    }, 500); // Small delay to ensure navigation has started
   };
 
   const getUserId = () => {
+    // Skip if we're logging out
+    if (isLoggingOut) return null;
     return authApiService.getUserIdFromToken();
   };
 
@@ -135,8 +160,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         userProjects,
         login,
         logout,
-        isAuthenticated: !!user && authApiService.isAuthenticated(),
+        isAuthenticated: !!user && authApiService.isAuthenticated() && !isLoggingOut,
         getUserId,
+        isLoggingOut, // Expose the flag to consumers
       }}
     >
       {children}

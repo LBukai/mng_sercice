@@ -9,7 +9,7 @@ import { useProjectUsers } from '@/hooks/useProjectUsers';
 import { useProjects } from '@/hooks/useProjects';
 import { Modal } from '@/components/common/Modal';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { ProjectRole } from '@/types/projectUser';
+import { ProjectRole, UserAndRole } from '@/types/projectUser';
 import Link from 'next/link';
 
 export default function ProjectUsersPage() {
@@ -53,7 +53,8 @@ export default function ProjectUsersPage() {
     }
   }, [projectId, fetchProjectUsers, getProjectById]);
 
-  const handleAddUsers = async (usersData) => {
+  const handleAddUsers = async (usersData: UserAndRole[]) => {
+    console.log(usersData);
     const success = await addUsersToProject(usersData);
     if (success) {
       setShowAddUsersModal(false);
@@ -61,6 +62,7 @@ export default function ProjectUsersPage() {
   };
 
   const handleUpdateRole = async (userId: string, role: ProjectRole) => {
+    console.log("handleUpdateRole",userId, role);
     await updateUserRole(userId, role);
   };
 

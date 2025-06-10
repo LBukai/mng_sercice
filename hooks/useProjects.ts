@@ -2,14 +2,19 @@ import { useState, useCallback } from 'react';
 import { Project } from '@/types/project';
 import { projectApiService } from '@/services/projectApi';
 import { useAlert } from '@/contexts/AlertContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
+  const { isLoggingOut } = useAuth();
 
   const fetchProjects = useCallback(async () => {
+
+    if (isLoggingOut) return [];// TODO more elegant solution needed
+
     try {
       setIsLoading(true);
       setError(null);
@@ -27,6 +32,9 @@ export const useProjects = () => {
   }, [showAlert]);
 
   const getProjectById = useCallback(async (id: string) => {
+
+    if (isLoggingOut) null;// TODO more elegant solution needed
+    
     try {
       setIsLoading(true);
       setError(null);

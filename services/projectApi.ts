@@ -100,7 +100,6 @@ export const projectApiService = {
 
   // Add users to a project
   addUsersToProject: async (projectId: string, usersData: UserAndRole[]): Promise<void> => {
-    console.log(JSON.stringify(usersData));
     const response = await fetch(`${API_BASE_URL}/projects/${projectId}/users`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -114,15 +113,31 @@ export const projectApiService = {
 
   // Update user role in a project
   updateUserRole: async (projectId: string, userId: string, role: ProjectRole): Promise<void> => {
+    console.log("TEST api", role);
+    
     const response = await fetch(`${API_BASE_URL}/projects/${projectId}/users/${userId}`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json', // This is crucial!
+      },
       body: JSON.stringify({ role }),
     });
-
+  
+    // Add error handling
     if (!response.ok) {
-      throw new Error(`Failed to update user role: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        sentRole: role
+      });
+      throw new Error(`Failed to update user role: ${response.status} ${response.statusText}`);
     }
+  
+    // Log successful response for debugging
+    console.log('Role update successful:', { projectId, userId, role });
   },
 
   // Remove a user from a project

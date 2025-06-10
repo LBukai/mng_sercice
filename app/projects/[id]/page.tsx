@@ -22,7 +22,7 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const projectId = params.id as string;
   
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<Project | null >(null);
   const { isLoading: projectLoading, error: projectError, getProjectById, deleteProject } = useProjects();
   const { projectUsers, isLoading: usersLoading, error: usersError, fetchProjectUsers } = useProjectUsers(projectId);
 
@@ -201,10 +201,10 @@ export default function ProjectDetailsPage() {
                         </div>
                         <div>
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            projectUser.role.role === 'project_lead' ? 'bg-blue-100 text-blue-800' :
+                            projectUser.role === 'Project Lead' ? 'bg-blue-100 text-blue-800' :
                             'bg-green-100 text-green-800'
                           }`}>
-                            {projectUser.role.role}
+                            {projectUser.role}
                           </span>
                         </div>
                       </div>

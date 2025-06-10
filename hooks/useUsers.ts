@@ -2,14 +2,20 @@ import { useState, useCallback } from 'react';
 import { User } from '@/types/user';
 import { apiService } from '@/services/api';
 import { useAlert } from '@/contexts/AlertContext';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
+  const { isLoggingOut } = useAuth();
 
   const fetchUsers = useCallback(async () => {
+
+    if (isLoggingOut) return [];
+
     try {
       setIsLoading(true);
       setError(null);
@@ -27,6 +33,9 @@ export const useUsers = () => {
   }, [showAlert]);
 
   const getUserById = useCallback(async (id: string) => {
+
+    if (isLoggingOut) return [];
+    
     try {
       setIsLoading(true);
       setError(null);

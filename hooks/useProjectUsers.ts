@@ -16,7 +16,6 @@ export const useProjectUsers = (projectId: string) => {
       setIsLoading(true);
       setError(null);
       const data = await projectApiService.getProjectUsers(projectId);
-      console.log("TEST", "useProjectUsers", data);
       if(!data){
         setProjectUsers(<ProjectUser[]>([]));
         return <ProjectUser[]>([]);
@@ -57,20 +56,45 @@ export const useProjectUsers = (projectId: string) => {
   const updateUserRole = useCallback(async (userId: string, role: ProjectRole) => {
     if (!projectId || !userId) return false;
     
+    // Add validation for empty role values
+    if (!role) {
+      console.error("Empty role value passed to updateUserRole");
+      showAlert('error', 'Failed to update user role: Empty role value');
+      return false;
+    }
+    
+    // Debug log role value
+    console.log(`Updating user ${userId} to role:`, role);
+    console.log(`Role type: ${typeof role}, value: ${role}`);
+    
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Log the current state
+      console.log("Current project users before update:", projectUsers);
+      
       await projectApiService.updateUserRole(projectId, userId, role);
       showAlert('success', 'User role updated successfully');
       
-      // Update the local state
-      setProjectUsers(prev => 
-        prev.map(pu => 
-          pu.user.id === userId 
-            ? { ...pu, role: { role } } 
-            : pu
-        )
-      );
+      // Update the local state using proper immutable pattern
+      setProjectUsers(prev => {
+        // Create a new array with updated role
+        const updated = prev.map(pu => {
+          if (pu.user.id === userId) {
+            // Important: Create a completely new object with the updated role
+            // The role is an object with a role property
+            return {
+              ...pu,
+              role:  role 
+            };
+          }
+          return pu;
+        });
+        
+        console.log("Updated project users after role change:", updated);
+        return updated;
+      });
       
       return true;
     } catch (err) {
@@ -81,7 +105,7 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, showAlert]);
+  }, [projectId, projectUsers, showAlert]);
 
   const removeUserFromProject = useCallback(async (userId: string) => {
     if (!projectId || !userId) return false;
