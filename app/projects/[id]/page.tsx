@@ -7,6 +7,7 @@ import { Project } from '@/types/project';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useProjects } from '@/hooks/useProjects';
 import { useProjectUsers } from '@/hooks/useProjectUsers';
+import { useWorkspaces } from '@/hooks/useWorkspaces';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { 
   WorkspaceLimitBadge, 
@@ -15,6 +16,7 @@ import {
   ProjectNumberBadge 
 } from '@/components/projects/ProjectBadge';
 import { Button, LinkButton } from '@/components/common/Button';
+import { WorkspaceTable } from '@/components/workspaces/WorkspaceTable';
 import Link from 'next/link';
 
 export default function ProjectDetailsPage() {
@@ -25,6 +27,7 @@ export default function ProjectDetailsPage() {
   const [project, setProject] = useState<Project | null >(null);
   const { isLoading: projectLoading, error: projectError, getProjectById, deleteProject } = useProjects();
   const { projectUsers, isLoading: usersLoading, error: usersError, fetchProjectUsers } = useProjectUsers(projectId);
+  const { workspaces, isLoading: workspacesLoading, error: workspacesError, addWorkspace, removeWorkspace } = useWorkspaces(projectId);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,7 +80,8 @@ export default function ProjectDetailsPage() {
         </div>
       ) : project ? (
         <>
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+          {/* Compact Project Information */}
+          <div className="bg-white shadow sm:rounded-lg mb-6">
             <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
               <div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900">Project Information</h3>
@@ -107,126 +111,128 @@ export default function ProjectDetailsPage() {
                 </button>
               </div>
             </div>
-            <div className="border-t border-gray-200">
-              <dl>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+
+            {/* More compact info table with grid layout */}
+            <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:divide-x sm:divide-gray-200">
+                <div className="px-4 py-3">
                   <dt className="text-sm font-medium text-gray-500">Project ID</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{project.id}</dd>
+                  <dd className="mt-1 text-sm text-gray-900">{project.id}</dd>
                 </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="px-4 py-3">
                   <dt className="text-sm font-medium text-gray-500">Project Name</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{project.name}</dd>
+                  <dd className="mt-1 text-sm text-gray-900">{project.name}</dd>
                 </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="px-4 py-3">
                   <dt className="text-sm font-medium text-gray-500">Workspace Limit</dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                  <dd className="mt-1 text-sm">
                     <WorkspaceLimitBadge value={project.workspacecountLimit} />
                   </dd>
                 </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="px-4 py-3">
                   <dt className="text-sm font-medium text-gray-500">User Limit</dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                  <dd className="mt-1 text-sm">
                     <UserLimitBadge value={project.usercountLimit} />
                   </dd>
                 </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="px-4 py-3">
                   <dt className="text-sm font-medium text-gray-500">Cost Center</dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                  <dd className="mt-1 text-sm">
                     <CostCenterBadge value={project.costCenter} />
                   </dd>
                 </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Project Number</dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
-                    <ProjectNumberBadge value={project.projectNumber} />
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Created At</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {/* This is a placeholder since the API doesn't provide this data */}
-                    {new Date().toLocaleDateString()}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="px-4 py-3">
                   <dt className="text-sm font-medium text-gray-500">Status</dt>
-                  <dd className="mt-1 sm:mt-0 sm:col-span-2">
+                  <dd className="mt-1">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                       Active
                     </span>
                   </dd>
                 </div>
-              </dl>
+              </div>
             </div>
           </div>
 
-          {/* Project Users Section */}
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Project Users</h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">Users with access to this project.</p>
+          {/* Two column layout for Users and Workspaces */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Project Users Section - Left side */}
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Project Users</h3>
+                  <p className="mt-1 max-w-2xl text-sm text-gray-500">Users with access to this project.</p>
+                </div>
+                <Link
+                  href={`/projects/${project.id}/users`}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  View All & Manage
+                </Link>
               </div>
-              <Link
-                href={`/projects/${project.id}/users`}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                View All & Manage
-              </Link>
-            </div>
-            <div className="border-t border-gray-200">
-              {usersLoading ? (
-                <div className="flex justify-center py-6">
-                  <LoadingSpinner size="md" />
-                </div>
-              ) : usersError ? (
-                <div className="p-4 text-sm text-red-600">
-                  Error loading project users.
-                </div>
-              ) : projectUsers.length > 0 ? (
-                <ul className="divide-y divide-gray-200">
-                  {projectUsers.slice(0, 5).map((projectUser) => (
-                    <li key={projectUser.user.id} className="px-4 py-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-xl font-medium text-gray-600">
-                              {projectUser.user.name.charAt(0).toUpperCase()}
+              <div className="border-t border-gray-200">
+                {usersLoading ? (
+                  <div className="flex justify-center py-6">
+                    <LoadingSpinner size="md" />
+                  </div>
+                ) : usersError ? (
+                  <div className="p-4 text-sm text-red-600">
+                    Error loading project users.
+                  </div>
+                ) : projectUsers.length > 0 ? (
+                  <ul className="divide-y divide-gray-200">
+                    {projectUsers.slice(0, 5).map((projectUser) => (
+                      <li key={projectUser.user.id} className="px-4 py-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-xl font-medium text-gray-600">
+                                {projectUser.user.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{projectUser.user.name}</div>
+                              <div className="text-sm text-gray-500">{projectUser.user.email}</div>
+                            </div>
+                          </div>
+                          <div>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              projectUser.role === 'Project Lead' ? 'bg-blue-100 text-blue-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {projectUser.role}
                             </span>
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{projectUser.user.name}</div>
-                            <div className="text-sm text-gray-500">{projectUser.user.email}</div>
-                          </div>
                         </div>
-                        <div>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            projectUser.role === 'Project Lead' ? 'bg-blue-100 text-blue-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {projectUser.role}
-                          </span>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-center py-6 text-gray-500">
-                  No users have been added to this project.
-                </div>
-              )}
-              {projectUsers.length > 5 && (
-                <div className="px-4 py-3 border-t border-gray-200 text-right">
-                  <Link
-                    href={`/projects/${project.id}/users`}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    View All {projectUsers.length} Users →
-                  </Link>
-                </div>
-              )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    No users have been added to this project.
+                  </div>
+                )}
+                {projectUsers.length > 5 && (
+                  <div className="px-4 py-3 border-t border-gray-200 text-right">
+                    <Link
+                      href={`/projects/${project.id}/users`}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      View All {projectUsers.length} Users →
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Project Workspaces Section - Right side */}
+            <WorkspaceTable
+              workspaces={workspaces}
+              isLoading={workspacesLoading}
+              error={workspacesError}
+              projectId={projectId}
+              onAddWorkspace={addWorkspace}
+              onDeleteWorkspace={removeWorkspace}
+            />
           </div>
         </>
       ) : (
