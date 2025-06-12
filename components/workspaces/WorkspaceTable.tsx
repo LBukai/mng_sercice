@@ -82,15 +82,28 @@ export const WorkspaceTable: React.FC<WorkspaceTableProps> = ({
               {workspaces.map((workspace) => (
                 <tr key={workspace.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {workspace.name}
+                    <Link 
+                      href={`/projects/${projectId}/workspaces/${workspace.id}`}
+                      className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                    >
+                      {workspace.name}
+                    </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button
-                      onClick={() => workspace.id && handleDeleteWorkspace(workspace.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex space-x-3">
+                      <Link 
+                        href={`/projects/${projectId}/workspaces/${workspace.id}`}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        Manage Users
+                      </Link>
+                      <button
+                        onClick={() => workspace.id && handleDeleteWorkspace(workspace.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
