@@ -1,0 +1,1566 @@
+openapi: 3.0.1
+
+info:
+  title: Open EDAG AI data middleware
+  description: Data middleware
+  version: 0.0.2
+
+servers:
+  - url: /api
+
+tags:
+  - name: Users
+    description: Operations related to users.
+  - name: Workspaces
+    description: Operations related to workspaces.
+  - name: Files
+    description: Operations related to files.
+  - name: Projects
+    description: Operations related to projects.
+  - name: Auth
+    description: Authentication operations.
+
+paths:
+  /users:
+    get:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      summary: Get users
+      description: Returns a list of users.
+      responses:
+        "200":
+          description: A JSON array of user names and IDs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+              example:
+                - id: 13
+                  name: Jessica Smith
+                  email: jessica.smith@edag.com
+                - id: 14
+                  name: John Smith
+                  email: john.smith@edag.com
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      summary: Create user
+      description: Create a new user.
+      requestBody:
+        description: JSON object that will define the new user to add to the system.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+            example:
+              name: John Smith
+              email: john.smith@edag.com
+              username: johnsmith
+              password: johnpass
+              isAdmin: false
+      responses:
+        "201":
+          description: A JSON representation of the newly created user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: 14
+                name: John Smith
+                email: john.smith@edag.com
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/{user_id}:
+    get:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      summary: Get user
+      description: Returns the data of the specified user.
+      parameters:
+        - $ref: "#/components/parameters/useridParam"
+      responses:
+        "200":
+          description: A JSON representation of the user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                - id: 13
+                  name: Jessica Smith
+                  email: jessica.smith@edag.com
+                  username: jessicasmith
+                  isAdmin: false
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    patch:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      summary: Update user
+      description: Modify the specified user.
+      parameters:
+        - $ref: "#/components/parameters/useridParam"
+      requestBody:
+        description: JSON of the parameters to modify.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+            example:
+              name: Jessica Smith
+              password: newpassword
+      responses:
+        "200":
+          description: Successfully modified.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      summary: Delete user
+      description: Delete specified user.
+      parameters:
+        - $ref: "#/components/parameters/useridParam"
+      responses:
+        "200":
+          description: Successfully deleted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/{user_id}/admin:
+    patch:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      summary: Update user admin status.
+      description: Modify the specified user's admin status.
+      parameters:
+        - $ref: "#/components/parameters/useridParam"
+      requestBody:
+        description: JSON of the parameters to modify.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+            example:
+              isAdmin: true
+      responses:
+        "200":
+          description: Successfully modified.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/{user_id}/workspaces:
+    get:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      summary: Get workspaces for user
+      description: Returns all the workspaces the specified user is member of and the role the user has.
+      parameters:
+        - $ref: "#/components/parameters/useridParam"
+      responses:
+        "200":
+          description: A JSON array of workspace IDs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+              example:
+                - id: 4
+                  role: user
+                - id: 5
+                  role: project_lead
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/{user_id}/projects:
+    get:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      summary: Get projects for user
+      description: Returns all the projects the specified user is member of and the role the user has.
+      parameters:
+        - $ref: "#/components/parameters/useridParam"
+      responses:
+        "200":
+          description: A JSON array of projects and roles.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAndRole"
+              example:
+                - project:
+                    id: 4
+                    name: Project 1
+                    projectNumber": K.987
+                  role: user
+                - id: 5
+                  role: project_lead
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /workspaces:
+    get:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Get workspaces
+      description: Returns the list of workspaces.
+      responses:
+        "200":
+          description: JSON array of the workspaces.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workspace"
+                example:
+                  - id: 4
+                    name: Workspace1
+                    project: Project 1
+                  - id: 5
+                    name: Workspace2
+                    project: Project 1
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /workspaces/{workspace_id}:
+    get:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Get workspace
+      description: Returns the data of the specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      responses:
+        "200":
+          description: JSON representation of the workspace.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+              example:
+                id: 5
+                name: Workpace5
+                slug: workspace5
+                project: Project 1
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    patch:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Update workspace
+      description: Modify the specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      requestBody:
+        description: JSON of the parameters to modify.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Workspace"
+            example:
+              name: Newname
+      responses:
+        "200":
+          description: Successfully modified.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+              example:
+                id: 5
+                name: newname
+                slug: workspace5
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Delete workspace
+      description: Delete specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      responses:
+        "200":
+          description: Successfully deleted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /workspaces/{workspace_id}/users:
+    get:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Get users in workspace
+      description: Returns the list of users in the specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      responses:
+        "200":
+          description: JSON array of users and their role in the specified workspace/project.
+          $ref: "#/components/responses/WorkspaceUserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Add users to workspace
+      description: Add user IDs with selected role to the specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      requestBody:
+        description: Array of user IDs and corresponding role IDs in JSON.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserAndRole"
+            example:
+              - user_id: 13
+              - user_id: 14
+      responses:
+        "200":
+          description: Successfully added.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Remove all users from workspace
+      description: Remove every user from specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      responses:
+        "200":
+          description: Successfully deleted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+          
+  /workspaces/{workspace_id}/users/{user_id}:
+    patch:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Update user role in workspace
+      description: Update user role in the specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+        - $ref: "#/components/parameters/useridParam"
+      requestBody:
+        description: Name of the role.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectRole"
+            example:
+               role: user
+      responses:
+        "200":
+          description: Successfully modified.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Delete user from workspace
+      description: Remove specified user from the specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+        - $ref: "#/components/parameters/useridParam"
+      responses:
+        "200":
+          description: Successfully removed.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /workspaces/{workspace_id}/files:
+    get:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Get files in workspace
+      description: Returns the list of files assigned to the workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      responses:
+        "200":
+          description: JSON array of the files metadata in the specified workspace.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+              example:
+                - id: 1
+                  name: Document 1
+                - id: 2
+                  name: Document 2
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Add files to workspace
+      description: Assign files to the workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      requestBody:
+        description: Array of file IDs in JSON.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/File"
+            example:
+              - id: 1
+              - id: 2
+              - id: 3
+      responses:
+        "200":
+          description: Successfully added.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Remove all files from workspace
+      description: Remove every file from specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+      responses:
+        "200":
+          description: Successfully deleted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /workspaces/{workspace_id}/files/{file_id}:
+    delete:
+      tags:
+        - Workspaces
+      security:
+        - BearerAuth: []
+      summary: Remove file from workspace
+      description: Remove file from specified workspace.
+      parameters:
+        - $ref: "#/components/parameters/workspaceidParam"
+        - $ref: "#/components/parameters/fileidParam"
+      responses:
+        "200":
+          description: Successfully deleted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /files:
+    get:
+      tags:
+        - Files
+      security:
+        - BearerAuth: []
+      summary: Get files
+      description: Returns the list of files.
+      responses:
+        "200":
+          description: JSON array of the files metadata.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+              example:
+                - id: 1
+                  name: Document 1
+                - id: 2
+                  name: Document 2
+                - id: 3
+                  name: Document 3
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /files/{file_id}:
+    get:
+      tags:
+        - Files
+      security:
+        - BearerAuth: []
+      summary: Get file
+      description: Returns metadata for the file.
+      parameters:
+        - $ref: "#/components/parameters/fileidParam"
+      responses:
+        "200":
+          description: JSON representation of file metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+              example:
+                id: 1
+                name: Document 1
+                created_by: 13
+                created_at: 2024-12-12
+                ttl: 2026-01-01
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    patch:
+      tags:
+        - Files
+      security:
+        - BearerAuth: []
+      summary: Update file
+      description: Modify file with the specified id.
+      parameters:
+        - $ref: "#/components/parameters/fileidParam"
+      requestBody:
+        description: JSON objects of the parameters to modify.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/File"
+            example:
+              name: RenamedFile
+              ttl: 2028-01-01
+      responses:
+        "200":
+          description: Successfully modified.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+              example:
+                id: 1
+                name: RenamedFile
+                created_by: 13
+                created_at: 2024-12-12
+                ttl: 2028-01-01
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Files
+      security:
+        - BearerAuth: []
+      summary: Delete file
+      description: Delete file with the specified id.
+      parameters:
+        - $ref: "#/components/parameters/fileidParam"
+      responses:
+        "200":
+          description: Successfully deleted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+          
+  /projects:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Get Projects.
+      description: Get the list of projects in json.
+      responses:
+        "200":
+          description: JSON list of the Projects.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+              example:
+                - id: 1
+                  name: Project 1
+                - id: 2
+                  name: Project 2
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Create Project.
+      description: Create new project with given parameters.
+      requestBody:
+        description: JSON representation of the project to be created.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Project"
+            example:
+              name: "Project 1"
+              workspacecountLimit: 5
+              usercountLimit: 20
+              costCenter: H.123
+              projectNumber: K.987
+      responses:
+        "200":
+          description: Successfully added.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/{project_id}:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Get Project.
+      description: Get the data of a specified project in json.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      responses:
+        "200":
+          description: JSON representation of the Project.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+              example:
+                id: 1
+                name: Project 1
+                workspaces:
+                  - id: 1
+                    name: workspace1
+                  - id: 2
+                    name: workspace2
+                projectLeads:
+                  - id: 12
+                    name: John Smith
+                workspacecountLimit: 5
+                usercountLimit: 20
+                workspacecount: 3
+                usercount: 15
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Update Project.
+      description: Modify specified project with JSON data.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      requestBody:
+        description: JSON of the parameters to modify.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Project"
+            example:
+              name: Bigger Project
+              workspacecountLimit: 20
+              usercountLimit: 100
+      responses:
+        "200":
+          description: Successfully modified.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Delete project
+      description: Delete specified project.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      responses:
+        "200":
+          description: Successfully deleted.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/{project_id}/workspaces:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Get project workspaces.
+      description: Returns all the workspaces the speicified project has.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      responses:
+        "200":
+          description: JSON array of the workspaces in the project.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workspace"
+              example:
+                - id: 1
+                  name: workspace1
+                - id: 2
+                  name: workspace2
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Add workspaces to Project.
+      description: Create new workspaces on the specified project.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      requestBody:
+        description: JSON representation of the workspaces to be created.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Workspace"
+            example:
+              - name: workspace1
+              - name: workspace2
+      responses:
+        "200":
+          description: Successfully added.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/{project_id}/users:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Get project users.
+      description: Returns all the users the speicified project has.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      responses:
+        "200":
+          description: JSON array of the users in the project.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserAndRole"
+              example:
+                [
+                  {
+                    "user": {
+                      "id": 1,
+                      "name": "John Smith",
+                      "username": "johnsmith",
+                    },
+                    "role": "Project Lead"
+                  },
+                  {
+                    "user": {
+                      "id": 2,
+                      "name": "Janett Smith",
+                      "username": "janettsmith",
+                    },
+                    "role": "Project Lead"
+                  }
+                ]
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Add users to project
+      description: Add user IDs with selected role to the specified project.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      requestBody:
+        description: Array of user IDs and corresponding role IDs in JSON.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserAndRole"
+            example:
+              - user_id: 13
+                role: project_lead
+              - user_id: 14
+                role: user
+      responses:
+        "200":
+          description: Successfully added.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/{project_id}/users/{user_id}:
+    patch:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Update user role in project
+      description: Update user role in the specified Project.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+        - $ref: "#/components/parameters/useridParam"
+      requestBody:
+        description: Name of the role.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectRole"
+            example:
+                role: user
+      responses:
+        "200":
+          description: Successfully modified.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Delete user from project
+      description: Remove specified user from the specified project.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+        - $ref: "#/components/parameters/useridParam"
+      responses:
+        "200":
+          description: Successfully removed.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /projects/{project_id}/files:
+    get:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Get project files.
+      description: Returns all the files the speicified project has.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      responses:
+        "200":
+          description: JSON array of the files in the project.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+              example:
+                - id: 1
+                  name: Document1
+                - id: 2
+                  name: Document2
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - Projects
+      security:
+        - BearerAuth: []
+      summary: Upload files to project.
+      description: Upload new files to the project.
+      parameters:
+        - $ref: "#/components/parameters/projectidParam"
+      requestBody:
+        description: JSON array of files
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                metadata:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/File"
+            example:
+              files:
+                - Document1
+                - Document2
+              metadata:
+                - name: Document 1
+                  ttl: 2026-03-03
+                - name: Document 2
+                  ttl: 2026-03-03
+      responses:
+        "201":
+          description: A JSON representation of the newly uploaded files.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+              example:
+                - id: 1
+                  name: Document 1
+                  created_by: 13
+                  created_at: 2025-02-02
+                - id: 2
+                  name: Document 2
+                  created_by: 13
+                  created_at: 2025-02-02
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /login:
+    get:
+      tags:
+        - Auth
+      security:
+        - BasicAuth: []
+      summary: Log in to the system.
+      description: Used by the frontend to send username and password, and the backend returns the bearer token.
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+              example:
+                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQxODEwNzUsImlhdCI6MTc0NDE4MDc3NSwiaXNzIjoib2VhaW1zIiwic3ViIjoiMSJ9.1WSf8SKUWaeeBaaDn2V0fA7eLVkGU9wbpYDrJNCcRzo
+                refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQyMDk1NzUsImlzcyI6Im9lYWltcyIsInN1YiI6IjEifQ.Q5eLQDJa80wgo8FdAZ1GYuaMjk30koFXx0BaT7233VM
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /refresh:
+    post:
+      tags:
+      - Auth
+      security:
+        - BearerAuth: []
+      summary: Refresh the access token
+      description: This endpoint allows users to refresh their access token using a valid refresh token.
+      requestBody:
+        description: Refresh token request
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: The refresh token
+            example:
+                refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQyMDk1NzUsImlzcyI6Im9lYWltcyIsInN1YiI6IjEifQ.Q5eLQDJa80wgo8FdAZ1GYuaMjk30koFXx0BaT7233VM
+      responses:
+        '200':
+          description: Successfully refreshed the access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: The new access token
+                  refresh_token:
+                    type: string
+                    description: The new refresh token
+              example:
+                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQxODEwNzUsImlhdCI6MTc0NDE4MDc3NSwiaXNzIjoib2VhaW1zIiwic3ViIjoiMSJ9.1WSf8SKUWaeeBaaDn2V0fA7eLVkGU9wbpYDrJNCcRzo
+                refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQyMDk1NzUsImlzcyI6Im9lYWltcyIsInN1YiI6IjEifQ.Q5eLQDJa80wgo8FdAZ1GYuaMjk30koFXx0BaT7233VM
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  schemas:
+    UserId:
+      properties:
+        id:  
+          type: string
+          description: Unique identifier of the user.
+          example: 1
+    User:
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the user.
+        name:
+          type: string
+          description: Name of the user.
+        username:
+          type: string
+          description: Username for anythingllm.
+        email:
+          type: string
+          description: E-mail address of the user.
+        password:
+          type: string
+          description: Password of the user.
+        isAdmin:
+          type: boolean
+          description: True if the user is a global admin on the system.
+          default: false
+
+    ProjectRole:
+      description: role
+      properties:
+        role:
+          type: string
+          description: ID of the role this user has in the project.
+          enum:
+            - project_lead
+            - user
+
+    UserAndRole:
+      description: User ID and role
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the user.
+        role:
+          $ref: "#/components/schemas/ProjectRole"
+
+    Workspace:
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the workspace.
+        name:
+          type: string
+          description: Name of the workspace.
+        slug:
+          type: string
+          description: Unique string identifying the workspace, created by Anythingllm.
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserAndRole"
+        project:
+          $ref: "#/components/schemas/Project"
+            
+    File:
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the file.
+        name:
+          type: string
+          description: Name of the file.
+        created_by:
+          type: string
+          description: ID of the user who uploaded the file.
+        created_at:
+          type: string
+          description: Time when the file was uploaded.
+        ttl:
+          type: string
+          description: Time To Live. When expired, the file should be deleted.
+
+    Project:
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the project.
+        name:
+          type: string
+          description: Name of the project.
+        projectNumber:
+          type: string
+          description: Project Number.
+        costCenter:
+          type: string
+          description: Cost center for the project.
+        workspaces:
+          type: array
+          items:
+            $ref: "#/components/schemas/Workspace"
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/File"
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserAndRole"
+        workspacecountLimit:
+          type: integer
+          description: Maximum number of workspaces the project can have.
+        usercountLimit:
+          type: integer
+          description: Maximum number of users the project can have.
+        workspacecount:
+          type: integer
+          description: Maximum number of workspaces the project can have.
+        usercount:
+          type: integer
+          description: Maximum number of users the project can have.
+
+    Problem:
+      properties:
+        title:
+          type: string
+          description: Short summary of the problem.
+          example: User not found
+        detail:
+          type: string
+          description: More precise explanation of the problem.
+          example: User with ID 15 not found.
+
+  parameters:
+    useridParam:
+      in: path
+      name: user_id
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of the user.
+      example: 1
+
+    workspaceidParam:
+      in: path
+      name: workspace_id
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of the workspace.
+      example: 1
+
+    fileidParam:
+      in: path
+      name: file_id
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of the file.
+      example: 1
+
+    projectidParam:
+      in: path
+      name: project_id
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of the project.
+      example: 1
+
+  responses:
+    WorkspaceUserResponse:
+      description: A user in a workspace.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              allOf:
+                - $ref: "#/components/schemas/User"
+                - $ref: "#/components/schemas/ProjectRole"
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+    BasicAuth:
+      type: http
+      scheme: basic
