@@ -33,7 +33,8 @@ export default function ProjectDetailsPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [showAddUsersModal, setShowAddUsersModal] = useState(false);
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showAddWorkspaceModal, setShowAddWorkspaceModal] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
   
   // Hooks for different resources
   const { isLoading: projectLoading, error: projectError, getProjectById, deleteProject } = useProjects();
@@ -105,13 +106,25 @@ export default function ProjectDetailsPage() {
     await removeUserFromProject(userId);
   };
 
+  const handleAddWorkspaceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newWorkspaceName.trim()) return;
+    
+    console.log("Adding workspace:", newWorkspaceName);
+    await addWorkspace({ name: newWorkspaceName });
+    setNewWorkspaceName('');
+    setShowAddWorkspaceModal(false);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Debug info */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed bottom-0 left-0 bg-black bg-opacity-75 text-white p-2 text-xs z-50">
-          Modal open: {showFileUploadModal ? 'Yes' : 'No'} | 
-          File selected: {selectedFile ? selectedFile.name : 'None'}
+          Add Workspace modal open: {showAddWorkspaceModal ? 'Yes' : 'No'} | 
+          File modal open: {showFileUploadModal ? 'Yes' : 'No'} | 
+          File count: {files ? files.length : 0} |
+          Workspace count: {workspaces ? workspaces.length : 0}
         </div>
       )}
       
@@ -135,11 +148,48 @@ export default function ProjectDetailsPage() {
         isOpen={showFileUploadModal}
         onClose={() => {
           setShowFileUploadModal(false);
-          setSelectedFile(null);
         }}
         onUpload={uploadFile}
-        selectedFile={selectedFile}
       />
+
+      {/* Add Workspace Modal */}
+      <Modal
+        isOpen={showAddWorkspaceModal}
+        onClose={() => setShowAddWorkspaceModal(false)}
+        title="Add New Workspace"
+      >
+        <form onSubmit={handleAddWorkspaceSubmit} className="p-4">
+          <div className="mb-4">
+            <label htmlFor="workspace-name" className="block text-sm font-medium text-gray-700 mb-1">
+              Workspace Name
+            </label>
+            <input
+              type="text"
+              id="workspace-name"
+              value={newWorkspaceName}
+              onChange={(e) => setNewWorkspaceName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          <div className="flex justify-end space-x-2 mt-6">
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={() => setShowAddWorkspaceModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              disabled={!newWorkspaceName.trim()}
+            >
+              Add Workspace
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       <PageHeader 
         title="Project Details" 
         action={
@@ -258,12 +308,28 @@ export default function ProjectDetailsPage() {
                             </div>
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              projectUser.role === 'Project Lead' ? 'bg-blue-100 text-blue-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {projectUser.role}
-                            </span>
+                            <div className="relative">
+                              <select
+                                value={projectUser.role}
+                                onChange={(e) => {
+                                  if (projectUser.user.id) {
+                                    handleUpdateRole(projectUser.user.id, e.target.value as ProjectRole);
+                                  }
+                                }}
+                                className={`px-2 py-1 text-xs font-medium rounded appearance-none cursor-pointer pr-8 ${
+                                  projectUser.role === 'Project Lead' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-green-100 text-green-800'
+                                }`}
+                              >
+                                <option value="Project Lead">Project Lead</option>
+                                <option value="User">User</option>
+                              </select>
+                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                            </div>
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap text-right text-xs">
                             <button 
@@ -285,7 +351,7 @@ export default function ProjectDetailsPage() {
             <div className="bg-white shadow rounded-lg">
               <div className="px-3 py-3 flex justify-between items-center border-b border-gray-200">
                 <h3 className="text-md font-medium text-gray-900">Workspaces</h3>
-                <Button size="sm" onClick={() => document.getElementById('add-workspace-btn')?.click()}>
+                <Button size="sm" onClick={() => setShowAddWorkspaceModal(true)}>
                   Add Workspace
                 </Button>
               </div>
@@ -335,29 +401,18 @@ export default function ProjectDetailsPage() {
                   </table>
                 )}
               </div>
-              {/* Hidden button for WorkspaceTable's add functionality */}
-              <button id="add-workspace-btn" className="hidden" onClick={() => {
-                // This will be connected to the WorkspaceTable add functionality
-                // We'll keep this hidden and use our custom button to trigger it
-              }}></button>
             </div>
 
             {/* Project Files Section */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-3 py-3 flex justify-between items-center border-b border-gray-200">
                 <h3 className="text-md font-medium text-gray-900">Project Files</h3>
-                <label 
-                  htmlFor="file-upload" 
-                  className="px-2 py-1 bg-blue-600 text-white text-xs rounded cursor-pointer hover:bg-blue-700 transition-colors"
+                <Button 
+                  size="sm"
+                  onClick={() => setShowFileUploadModal(true)}
                 >
                   Upload File
-                </label>
-                <input id="file-upload" type="file" className="hidden" onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    uploadFile(e.target.files[0]);
-                    e.target.value = ''; // Reset for future uploads
-                  }
-                }} />
+                </Button>
               </div>
               <div className="overflow-auto max-h-96">
                 {filesLoading ? (
@@ -389,7 +444,7 @@ export default function ProjectDetailsPage() {
                               {file.name}
                             </a>
                             <p className="text-xs text-gray-500">
-                              {new Date(file.uploadedAt).toLocaleDateString()}
+                              {file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : 'No date'}
                             </p>
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap text-right text-xs">

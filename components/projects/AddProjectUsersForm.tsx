@@ -98,8 +98,8 @@ export const AddProjectUsersForm = ({
             onChange={handleRoleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="Project Lead">Project Lead</option>
             <option value="user">User</option>
+            <option value="Project Lead">Project Lead</option>
           </select>
         </div>
         

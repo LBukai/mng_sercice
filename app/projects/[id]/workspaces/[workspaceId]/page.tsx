@@ -1,30 +1,34 @@
-// app/projects/[projectId]/workspaces/[workspaceId]/page.tsx
+// app/projects/[id]/workspaces/[workspaceId]/page.tsx
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useWorkspaceUsers } from '@/hooks/useWorkspaceUsers';
+import { useWorkspaceFiles } from '@/hooks/useWorkspaceFiles';
 import { useUsers } from '@/hooks/useUsers';
 import { Workspace } from '@/types/workspace';
-import { User } from '@/types/user';
 import { getWorkspace, updateWorkspace } from '@/services/workspaceApi';
 import { useAlert } from '@/contexts/AlertContext';
 import WorkspaceUsersTable from '@/components/workspaces/WorkspaceUsersTable';
+import WorkspaceFilesTable from '@/components/workspaces/WorkspaceFilesTable';
+import AddFilesToWorkspaceModal from '@/components/workspaces/AddFilesToWorkspaceModal';
 import Link from 'next/link';
 
 export default function WorkspaceDetailsPage() {
+  // Use React.use() for params in the future
   const params = useParams();
   const router = useRouter();
-  const projectId = params.projectId as string;
+  const projectId = params.id as string;
   const workspaceId = parseInt(params.workspaceId as string, 10);
   
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [showAddFilesModal, setShowAddFilesModal] = useState(false);
   const { showAlert } = useAlert();
 
   // Get workspace users and all users
@@ -36,6 +40,15 @@ export default function WorkspaceDetailsPage() {
     removeUser, 
     updateUserRole 
   } = useWorkspaceUsers(workspaceId);
+  
+  // Get workspace files
+  const {
+    files: workspaceFiles,
+    loading: filesLoading,
+    error: filesError,
+    addFiles,
+    removeFile
+  } = useWorkspaceFiles(workspaceId);
   
   const {
     users: allUsers,
@@ -80,6 +93,12 @@ export default function WorkspaceDetailsPage() {
       console.error('Error updating workspace:', error);
       showAlert('error', 'Failed to update workspace');
     }
+  };
+
+  const handleAddFiles = async (fileIds: string[]): Promise<boolean> => {
+    console.log("Adding files:", fileIds);
+    const result = await addFiles(fileIds);
+    return result;
   };
 
   if (isLoading) {
@@ -183,7 +202,19 @@ export default function WorkspaceDetailsPage() {
         </div>
       </div>
 
-      {/* Workspace Users */}
+      {/* Workspace Files Table */}
+      <WorkspaceFilesTable
+        files={workspaceFiles || []}
+        isLoading={filesLoading}
+        error={filesError}
+        onRemoveFile={removeFile}
+        onAddFiles={() => {
+          console.log("Add Files button clicked");
+          setShowAddFilesModal(true);
+        }}
+      />
+
+      {/* Workspace Users Table */}
       <WorkspaceUsersTable
         workspaceUsers={workspaceUsers}
         projectUsers={allUsers}
@@ -193,6 +224,23 @@ export default function WorkspaceDetailsPage() {
         onRemoveUser={removeUser}
         onUpdateRole={updateUserRole}
       />
+
+      {/* Add Files Modal */}
+      <AddFilesToWorkspaceModal
+        isOpen={showAddFilesModal}
+        onClose={() => setShowAddFilesModal(false)}
+        onSubmit={handleAddFiles}
+        projectId={projectId}
+        existingFileIds={(workspaceFiles || []).map(file => file.id)}
+      />
+      
+      {/* Debug Info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-0 left-0 bg-black bg-opacity-75 text-white p-2 text-xs z-50">
+          Modal open: {showAddFilesModal ? 'Yes' : 'No'} | 
+          Files count: {workspaceFiles ? workspaceFiles.length : 0}
+        </div>
+      )}
     </div>
   );
 }

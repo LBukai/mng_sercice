@@ -1,36 +1,54 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { PageHeader } from '../../../../components/common/PageHeader';
 import { FileTable } from '../../../../components/files/FileTable';
 import { FileUploadForm } from '../../../../components/files/FileUploadForm';
-import { AuthLayoutWrapper } from '../../../../components/layout/AuthLayoutWrapper';
+import { FileUploadModal } from '../../../../components/files/FileUploadModal';
 import { useProjectFiles } from '../../../../hooks/useProjectFiles';
 
 interface ProjectFilesPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 const ProjectFilesPage = ({ params }: ProjectFilesPageProps) => {
-  const projectId = params.id;
+  // Use React.use() to unwrap the params promise
+  const unwrappedParams = React.use(params);
+  const projectId = unwrappedParams.id;
+  
   const { files, loading, uploadFile, deleteFile } = useProjectFiles(projectId);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleUpload = async (file: File, ttl: string) => {
+    await uploadFile(file, ttl);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
-    <AuthLayoutWrapper>
-      <div className="container mx-auto px-4 py-6">
-        <PageHeader title="Project Files" />
-        <div className="mb-8">
-          <FileUploadForm onUpload={uploadFile} />
-        </div>
-        <FileTable 
-          files={files} 
-          loading={loading} 
-          onDelete={deleteFile} 
-        />
+    <div className="container mx-auto px-4 py-6">
+      <PageHeader title="Project Files" />
+      <div className="mb-8">
+        <FileUploadForm onOpenModal={handleOpenModal} />
       </div>
-    </AuthLayoutWrapper>
+      <FileTable 
+        files={files} 
+        loading={loading} 
+        onDelete={deleteFile} 
+      />
+      
+      <FileUploadModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onUpload={handleUpload}
+      />
+    </div>
   );
 };
 

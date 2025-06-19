@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 
@@ -6,14 +6,12 @@ interface FileUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (file: File, ttl: string) => Promise<void>;
-  selectedFile: File | null;
 }
 
 export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   isOpen,
   onClose,
   onUpload,
-  selectedFile
 }) => {
   // Set default TTL date to 1 year from now
   const defaultDate = new Date();
@@ -21,8 +19,10 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const defaultDateStr = defaultDate.toISOString().split('T')[0];
   
   const [ttl, setTtl] = useState<string>(defaultDateStr);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -30,14 +30,26 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       setTtl(defaultDateStr);
       setError(null);
       setIsUploading(false);
+      setSelectedFile(null);
+      
+      // Reset file input if it exists
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   }, [isOpen, defaultDateStr]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedFile) {
-      setError('No file selected');
+      setError('Please select a file to upload');
       return;
     }
     
@@ -75,6 +87,20 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Upload File" size="md">
       <form onSubmit={handleSubmit} className="p-4">
+        <div className="mb-4">
+          <label htmlFor="file" className="block text-sm font-medium text-gray-700 mb-1">
+            Select File
+          </label>
+          <input
+            type="file"
+            id="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+        
         {selectedFile && (
           <div className="mb-4">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Selected File</h3>

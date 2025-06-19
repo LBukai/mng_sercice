@@ -18,9 +18,32 @@ export const FileTable: React.FC<FileTableProps> = ({ files, loading, onDelete }
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return 'N/A';
+    
+    // Check if the date is in ISO format (with time) or just a date string (YYYY-MM-DD)
+    const isFullISOString = dateString.includes('T');
+    
+    try {
+      const date = new Date(dateString);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+      
+      // If it's a full ISO string with time, show date and time
+      if (isFullISOString) {
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+      } 
+      // If it's just a date string (YYYY-MM-DD), show only the date
+      else {
+        return date.toLocaleDateString();
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
   };
 
   if (loading) {
@@ -37,13 +60,14 @@ export const FileTable: React.FC<FileTableProps> = ({ files, loading, onDelete }
             <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">Type</th>
             <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">Uploaded By</th>
             <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">Uploaded At</th>
+            <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">Expires On</th>
             <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">Actions</th>
           </tr>
         </thead>
         <tbody>
           {files.length === 0 ? (
             <tr>
-              <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+              <td colSpan={7} className="py-4 px-4 text-center text-gray-500">
                 No files found for this project
               </td>
             </tr>
@@ -64,6 +88,7 @@ export const FileTable: React.FC<FileTableProps> = ({ files, loading, onDelete }
                 <td className="py-3 px-4">{file.type}</td>
                 <td className="py-3 px-4">{file.uploadedBy}</td>
                 <td className="py-3 px-4">{formatDate(file.uploadedAt)}</td>
+                <td className="py-3 px-4">{formatDate(file.ttl)}</td>
                 <td className="py-3 px-4">
                   <Button
                     variant="danger"

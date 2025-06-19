@@ -23,6 +23,7 @@ https://raw.githubusercontent.com/LBukai/mng_sercice/main/app/my-projects/page.t
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/app/projects/page.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/app/projects/edit/[id]/page.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/app/projects/[id]/page.tsx
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/app/projects/[id]/files/page.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/app/projects/[id]/users/page.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/app/projects/[id]/workspaces/[workspaceId]/page.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/app/settings/page.tsx
@@ -35,6 +36,9 @@ https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/common/Load
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/common/Modal.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/common/PageHeader.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/common/SkeletonLoader.tsx
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/files/FileTable.tsx
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/files/FileUploadForm.tsx
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/files/FileUploadModal.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/layout/AuthLayoutWrapper.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/layout/Header.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/layout/Sidebar.tsx
@@ -50,6 +54,7 @@ https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/workspaces/
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/workspaces/WorkspaceUsersTable.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/contexts/AlertContext.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/contexts/AuthContext.tsx
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useProjectFiles.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useProjects.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useProjectUsers.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useUsers.ts
@@ -62,9 +67,11 @@ https://raw.githubusercontent.com/LBukai/mng_sercice/main/public/vercel.svg
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/public/window.svg
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/api.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/authApi.ts
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/fileApi.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/projectApi.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/workspaceApi.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/workspaceUserApi.ts
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/types/file.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/types/project.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/types/projectUser.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/types/user.ts
