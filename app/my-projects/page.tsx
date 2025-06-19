@@ -27,7 +27,7 @@ export default function MyProjectsPage() {
       <PageHeader title="My Projects" />
       
       <div className="bg-white rounded-lg shadow-md p-6">
-        {userProjects.length > 0 ? (
+        {userProjects && userProjects.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {userProjects.map((userProject, index) => (
               <div 
