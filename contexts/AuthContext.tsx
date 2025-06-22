@@ -166,19 +166,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Set logging out flag to prevent API calls during logout
     setIsLoggingOut(true);
     
-    // Clear tokens and user
-    authApiService.clearTokens();
-    setUser(null);
-    setUserProjects([]);
-    
-    // Redirect to login page
+    // First, navigate to login page
     router.push('/login');
-    showAlert('info', 'You have been logged out');
     
-    // Reset logging out flag after a short delay to ensure navigation completes
+    // After navigation is started, clear tokens and user state after a short delay
+    // This ensures API calls are blocked before tokens are removed
     setTimeout(() => {
-      setIsLoggingOut(false);
-    }, 500);
+      // Clear tokens and user data
+      authApiService.clearTokens();
+      setUser(null);
+      setUserProjects([]);
+      
+      // Show notification
+      showAlert('info', 'You have been logged out');
+      
+      // Reset logging out flag after a slightly longer delay
+      // This ensures navigation completes before flag is reset
+      setTimeout(() => {
+        setIsLoggingOut(false);
+      }, 500);
+    }, 100);
   };
 
   const getUserId = () => {

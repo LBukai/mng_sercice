@@ -6,6 +6,7 @@ import { Modal } from '@/components/common/Modal';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { useUsers } from '@/hooks/useUsers';
 import { UserBadge } from './UserBadge';
+import { MultiUserModal } from './MultiUserModal';
 
 interface UserTableProps {
   users: User[];
@@ -18,11 +19,12 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
   const [sortField, setSortField] = useState<keyof User>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showMultiUserModal, setShowMultiUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   
-  const { createUser, updateUser, deleteUser } = useUsers();
+  const { createUser, createMultipleUsers, updateUser, deleteUser } = useUsers();
 
   const handleSort = (field: keyof User) => {
     if (sortField === field) {
@@ -50,6 +52,18 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
     if (result) {
       setShowAddModal(false);
       onUserChange(); // Refresh the user list
+    }
+  };
+
+  const handleAddMultipleUsers = async (usersData: Omit<User, 'id'>[]) => {
+    try {
+      // Use the new function to create multiple users
+      await createMultipleUsers(usersData);
+      setShowMultiUserModal(false);
+      onUserChange(); // Refresh the user list
+    } catch (error) {
+      console.error('Error creating multiple users:', error);
+      throw error;
     }
   };
 
@@ -87,12 +101,20 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium text-gray-900">User List</h2>
-        <button 
-          onClick={() => setShowAddModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Add User
-        </button>
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => setShowMultiUserModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            Add Multiple Users
+          </button>
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Add User
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -218,6 +240,13 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
           onCancel={() => setShowAddModal(false)}
         />
       </Modal>
+
+      {/* Add Multiple Users Modal */}
+      <MultiUserModal 
+        isOpen={showMultiUserModal} 
+        onClose={() => setShowMultiUserModal(false)}
+        onSubmit={handleAddMultipleUsers}
+      />
 
       {/* Edit User Modal */}
       <Modal 

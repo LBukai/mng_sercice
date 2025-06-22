@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { /*useRouter, */useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAlert } from '@/contexts/AlertContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -14,13 +14,13 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const router = useRouter();
+  //const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isAuthenticated, isAdmin } = useAuth();
+  const { login, /*isAuthenticated, isAdmin, isLoggingOut*/} = useAuth();
   const { showAlert } = useAlert();
   
   // Get the 'from' parameter to redirect after login
-  const from = searchParams.get('from') || '/';
+  //const from = searchParams.get('from') || '/';
   const sessionExpired = searchParams.get('session_expired') === 'true';
 
   // Check if session expired and show an alert
@@ -31,8 +31,9 @@ export default function LoginPage() {
   }, [sessionExpired, showAlert]);
 
   // Check if user is already logged in
-  useEffect(() => {
-    if (isAuthenticated) {
+  //TODO ADD DELAY SO AFTER LOGOUT DOEST TRY TO RELOGIN
+  /*useEffect(() => {
+    if (isAuthenticated && !isLoggingOut) {
       // Redirect based on role
       if (isAdmin && from !== '/my-projects') {
         // Admin redirects to dashboard only if they weren't trying to go to my-projects
@@ -42,7 +43,7 @@ export default function LoginPage() {
         router.push('/my-projects');
       }
     }
-  }, [isAuthenticated, isAdmin, router, from]);
+  }, [isAuthenticated, isAdmin, router, from]);*/
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
