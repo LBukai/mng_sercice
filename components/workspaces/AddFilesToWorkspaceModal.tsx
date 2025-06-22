@@ -27,26 +27,29 @@ const AddFilesToWorkspaceModal: React.FC<AddFilesToWorkspaceModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Use useEffect with the fetchProjectFiles function inside to avoid dependency issues
   useEffect(() => {
+    // Define fetchProjectFiles inside useEffect to avoid dependency issues
+    const fetchProjectFiles = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const files = await fileApiService.getProjectFiles(projectId);
+        setProjectFiles(files);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch project files';
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Only fetch files when modal is open
     if (isOpen) {
       fetchProjectFiles();
       setSelectedFileIds([]);
     }
   }, [isOpen, projectId]);
-
-  const fetchProjectFiles = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const files = await fileApiService.getProjectFiles(projectId);
-      setProjectFiles(files);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch project files';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (selectedFileIds.length === 0) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ProjectUsersTable } from '@/components/projects/ProjectUsersTable';
 import { AddProjectUsersForm } from '@/components/projects/AddProjectUsersForm';
@@ -14,7 +14,6 @@ import Link from 'next/link';
 
 export default function ProjectUsersPage() {
   const params = useParams();
-  const router = useRouter();
   const projectId = params.id as string;
   
   const [showAddUsersModal, setShowAddUsersModal] = useState(false);
@@ -54,7 +53,6 @@ export default function ProjectUsersPage() {
   }, [projectId, fetchProjectUsers, getProjectById]);
 
   const handleAddUsers = async (usersData: UserAndRole[]) => {
-    console.log(usersData);
     const success = await addUsersToProject(usersData);
     if (success) {
       setShowAddUsersModal(false);
@@ -62,7 +60,6 @@ export default function ProjectUsersPage() {
   };
 
   const handleUpdateRole = async (userId: string, role: ProjectRole) => {
-    console.log("handleUpdateRole",userId, role);
     await updateUserRole(userId, role);
   };
 

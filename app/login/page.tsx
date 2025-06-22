@@ -4,7 +4,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAlert } from '@/contexts/AlertContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export default function LoginPage() {
@@ -17,7 +16,6 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isAuthenticated, isAdmin } = useAuth();
-  const { showAlert } = useAlert();
   
   // Get the 'from' parameter to redirect after login
   const from = searchParams.get('from') || '/';

@@ -17,11 +17,8 @@ import {
 } from '@/components/projects/ProjectBadge';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
-import { FileTable } from '@/components/files/FileTable';
 import { FileUploadModal } from '@/components/files/FileUploadModal';
-import { WorkspaceTable } from '@/components/workspaces/WorkspaceTable';
 import { AddProjectUsersForm } from '@/components/projects/AddProjectUsersForm';
-import { ProjectUsersTable } from '@/components/projects/ProjectUsersTable';
 import { UserAndRole, ProjectRole } from '@/types/projectUser';
 import Link from 'next/link';
 

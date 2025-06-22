@@ -14,7 +14,6 @@ export default function EditUserPage() {
   const { showAlert } = useAlert();
   const userId = params.id as string;
   
-  const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<User>({
     id: '',
     name: '',
@@ -37,7 +36,6 @@ export default function EditUserPage() {
       try {
         setIsLoading(true);
         const data = await apiService.getUserById(userId);
-        setUser(data);
         setFormData(data);
         setError(null);
       } catch (err) {

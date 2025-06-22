@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams} from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -20,7 +20,6 @@ import Link from 'next/link';
 export default function WorkspaceDetailsPage() {
   // Use React.use() for params in the future
   const params = useParams();
-  const router = useRouter();
   const projectId = params.id as string;
   const workspaceId = parseInt(params.workspaceId as string, 10);
   

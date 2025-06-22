@@ -50,6 +50,8 @@ https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/projects/Pr
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/users/UserBadge.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/users/UserForm.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/users/UserTable.tsx
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/workspaces/AddFilesToWorkspaceModal.tsx
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/workspaces/WorkspaceFilesTable.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/workspaces/WorkspaceTable.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/components/workspaces/WorkspaceUsersTable.tsx
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/contexts/AlertContext.tsx
@@ -58,6 +60,7 @@ https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useProjectFiles.
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useProjects.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useProjectUsers.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useUsers.ts
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useWorkspaceFiles.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useWorkspaces.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/hooks/useWorkspaceUsers.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/public/file.svg
@@ -70,6 +73,7 @@ https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/authApi.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/fileApi.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/projectApi.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/workspaceApi.ts
+https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/workspaceFileApi.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/services/workspaceUserApi.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/types/file.ts
 https://raw.githubusercontent.com/LBukai/mng_sercice/main/types/project.ts

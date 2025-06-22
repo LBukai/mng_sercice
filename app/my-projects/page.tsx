@@ -1,16 +1,13 @@
 // app/my-projects/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 export default function MyProjectsPage() {
-  const { userProjects, isLoading, isAdmin, isAuthenticated } = useAuth();
-  const router = useRouter();
+  const { userProjects, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -27,7 +24,7 @@ export default function MyProjectsPage() {
       <PageHeader title="My Projects" />
       
       <div className="bg-white rounded-lg shadow-md p-6">
-        {userProjects && userProjects.length > 0 ? (
+        {userProjects.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {userProjects.map((userProject, index) => (
               <div 
@@ -82,7 +79,7 @@ export default function MyProjectsPage() {
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No projects</h3>
             <p className="mt-1 text-sm text-gray-500">
-              You haven't been assigned to any projects yet.
+              You haven&apos;t been assigned to any projects yet.
             </p>
           </div>
         )}

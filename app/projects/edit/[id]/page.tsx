@@ -13,7 +13,6 @@ export default function EditProjectPage() {
   const router = useRouter();
   const projectId = params.id as string;
   
-  const [project, setProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<Project>({
     id: '',
     name: '',
@@ -36,7 +35,6 @@ export default function EditProjectPage() {
       if (projectId) {
         const projectData = await getProjectById(projectId);
         if (projectData) {
-          setProject(projectData);
           setFormData(projectData);
         }
       }
