@@ -5,10 +5,10 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useRouter } from 'next/navigation';
 import { useAlert } from './AlertContext';
 import authApiService from '@/services/authApi';
+import refreshService from '@/services/refresh';
 import { apiService } from '@/services/api';
 import { User } from '@/types/user';
 import { UserProject } from '@/types/userProject';
-import { setApiLoggingOutState } from '@/services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -18,8 +18,9 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoggingOut: boolean;
   getUserId: () => string | null;
-  isLoggingOut: boolean; // New flag to track logout state
+  checkAndRefreshToken: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,8 +31,9 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: () => {},
   isAuthenticated: false,
+  isLoggingOut: false,
   getUserId: () => null,
-  isLoggingOut: false, // Default value for the new flag
+  checkAndRefreshToken: async () => false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -44,21 +46,49 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProjects, setUserProjects] = useState<UserProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false); // Add the new state
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
   const { showAlert } = useAlert();
 
-  useEffect(() => {
-    // Update the API service's logging out state whenever isLoggingOut changes
-    setApiLoggingOutState(isLoggingOut);
-  }, [isLoggingOut]);
+  // Check and refresh token if needed
+  const checkAndRefreshToken = async (): Promise<boolean> => {
+    try {
+      const token = authApiService.getAccessToken();
+      
+      // If no token, we're not authenticated
+      if (!token) {
+        return false;
+      }
+      
+      // Check if token is expired or about to expire
+      if (authApiService.isTokenExpired(token)) {
+        // Try to refresh the token
+        const refreshResult = await refreshService.refreshAuthToken();
+        return refreshResult.success;
+      }
+      
+      // Token is valid
+      return true;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      // Failed to refresh, so logout
+      logout();
+      return false;
+    }
+  };
 
   const fetchUserData = async () => {
-    // Skip fetching if we're in the process of logging out
-    if (isLoggingOut) return;
-    
     try {
       setIsLoading(true);
+      
+      // First check token validity
+      const isTokenValid = await checkAndRefreshToken();
+      if (!isTokenValid) {
+        setUser(null);
+        setUserProjects([]);
+        return;
+      }
+      
       const userId = authApiService.getUserIdFromToken();
       
       if (!userId) {
@@ -77,26 +107,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error('Error fetching user data:', error);
       // If we can't fetch user data, log out
-      authApiService.clearTokens();
-      setUser(null);
-      setUserProjects([]);
+      logout();
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // Check if user is logged in, but skip if we're logging out
-    if (!isLoggingOut) {
-      const isLoggedIn = authApiService.isAuthenticated();
-      
-      if (isLoggedIn) {
-        fetchUserData();
-      } else {
-        setIsLoading(false);
-      }
+    // Check if user is logged in
+    const isLoggedIn = authApiService.isAuthenticated();
+    
+    if (isLoggedIn) {
+      fetchUserData();
+    } else {
+      setIsLoading(false);
     }
-  }, [isLoggingOut]); // Add isLoggingOut as a dependency
+    
+    // Setup token refresh interval
+    const tokenCheckInterval = setInterval(() => {
+      if (authApiService.isAuthenticated()) {
+        checkAndRefreshToken();
+      }
+    }, 60000); // Check every minute
+    
+    return () => {
+      clearInterval(tokenCheckInterval);
+    };
+  }, []);
 
   const login = async (username: string, password: string) => {
     try {
@@ -126,7 +163,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = () => {
-    // Set the logging out flag to prevent further API calls
+    // Set logging out flag to prevent API calls during logout
     setIsLoggingOut(true);
     
     // Clear tokens and user
@@ -138,16 +175,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     router.push('/login');
     showAlert('info', 'You have been logged out');
     
-    // Reset the logging out flag after navigation (optional, depends on your needs)
-    // You can either reset it immediately or after a short timeout
+    // Reset logging out flag after a short delay to ensure navigation completes
     setTimeout(() => {
       setIsLoggingOut(false);
-    }, 500); // Small delay to ensure navigation has started
+    }, 500);
   };
 
   const getUserId = () => {
-    // Skip if we're logging out
-    if (isLoggingOut) return null;
     return authApiService.getUserIdFromToken();
   };
 
@@ -160,9 +194,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         userProjects,
         login,
         logout,
-        isAuthenticated: !!user && authApiService.isAuthenticated() && !isLoggingOut,
+        isAuthenticated: !!user && authApiService.isAuthenticated(),
+        isLoggingOut,
         getUserId,
-        isLoggingOut, // Expose the flag to consumers
+        checkAndRefreshToken,
       }}
     >
       {children}

@@ -8,15 +8,17 @@ import {
   updateWorkspaceUserRole
 } from '@/services/workspaceUserApi';
 import { useAlert } from '@/contexts/AlertContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useWorkspaceUsers = (workspaceId: number) => {
   const [workspaceUsers, setWorkspaceUsers] = useState<WorkspaceUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
+  const { isLoggingOut } = useAuth();
 
   const fetchWorkspaceUsers = useCallback(async () => {
-    if (!workspaceId) return;
+    if (!workspaceId || isLoggingOut) return;
     
     try {
       setIsLoading(true);
@@ -32,13 +34,15 @@ export const useWorkspaceUsers = (workspaceId: number) => {
     } finally {
       setIsLoading(false);
     }
-  }, [workspaceId, showAlert]);
+  }, [workspaceId, showAlert, isLoggingOut]);
 
   useEffect(() => {
     fetchWorkspaceUsers();
   }, [fetchWorkspaceUsers]);
 
   const addUsers = useCallback(async (users: UserAndRole[]) => {
+    if (isLoggingOut) return;
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -52,9 +56,11 @@ export const useWorkspaceUsers = (workspaceId: number) => {
     } finally {
       setIsLoading(false);
     }
-  }, [workspaceId, fetchWorkspaceUsers, showAlert]);
+  }, [workspaceId, fetchWorkspaceUsers, showAlert, isLoggingOut]);
 
   const removeUser = useCallback(async (userId: string) => {
+    if (isLoggingOut) return;
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -68,15 +74,31 @@ export const useWorkspaceUsers = (workspaceId: number) => {
     } finally {
       setIsLoading(false);
     }
-  }, [workspaceId, fetchWorkspaceUsers, showAlert]);
+  }, [workspaceId, fetchWorkspaceUsers, showAlert, isLoggingOut]);
 
   const updateUserRole = useCallback(async (userId: string, role: string) => {
+    if (isLoggingOut) return;
+    
     try {
       setIsLoading(true);
       setError(null);
       await updateWorkspaceUserRole(workspaceId, userId, role);
       showAlert('success', 'User role updated successfully');
-      await fetchWorkspaceUsers();
+      
+      // Update the local state
+      setWorkspaceUsers(prev => 
+        prev.map(wu => {
+          if (wu.user.id === userId) {
+            return {
+              ...wu,
+              role // WorkspaceUser.role is a simple string
+            };
+          }
+          return wu;
+        })
+      );
+      
+      // No need to fetch again since we've updated the local state
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
@@ -84,7 +106,7 @@ export const useWorkspaceUsers = (workspaceId: number) => {
     } finally {
       setIsLoading(false);
     }
-  }, [workspaceId, fetchWorkspaceUsers, showAlert]);
+  }, [workspaceId, fetchWorkspaceUsers, showAlert, isLoggingOut]);
 
   return {
     workspaceUsers,

@@ -1,21 +1,24 @@
 import { useState, useCallback } from 'react';
 import { projectApiService } from '@/services/projectApi';
 import { useAlert } from '@/contexts/AlertContext';
-import { UserAndRole, ProjectRole, ProjectUser } from '@/types/projectUser';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserAndRole, ProjectRole, ProjectUser, ProjectRoleDefinition } from '@/types/projectUser';
 
 export const useProjectUsers = (projectId: string) => {
   const [projectUsers, setProjectUsers] = useState<ProjectUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
+  const { isLoggingOut } = useAuth();
 
   const fetchProjectUsers = useCallback(async () => {
-    if (!projectId) return [];
+    if (!projectId || isLoggingOut) return [];
     
     try {
       setIsLoading(true);
       setError(null);
       const data = await projectApiService.getProjectUsers(projectId);
+      console.log("TEST", "useProjectUsers", data);
       if(!data){
         setProjectUsers(<ProjectUser[]>([]));
         return <ProjectUser[]>([]);
@@ -30,10 +33,10 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, showAlert]);
+  }, [projectId, showAlert, isLoggingOut]);
 
   const addUsersToProject = useCallback(async (usersData: UserAndRole[]) => {
-    if (!projectId) return false;
+    if (!projectId || isLoggingOut) return false;
     
     try {
       setIsLoading(true);
@@ -51,50 +54,21 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, fetchProjectUsers, showAlert]);
+  }, [projectId, fetchProjectUsers, showAlert, isLoggingOut]);
 
   const updateUserRole = useCallback(async (userId: string, role: ProjectRole) => {
-    if (!projectId || !userId) return false;
-    
-    // Add validation for empty role values
-    if (!role) {
-      console.error("Empty role value passed to updateUserRole");
-      showAlert('error', 'Failed to update user role: Empty role value');
-      return false;
-    }
-    
-    // Debug log role value
-    console.log(`Updating user ${userId} to role:`, role);
-    console.log(`Role type: ${typeof role}, value: ${role}`);
+    if (!projectId || !userId || isLoggingOut) return false;
     
     try {
       setIsLoading(true);
       setError(null);
-      
-      // Log the current state
-      console.log("Current project users before update:", projectUsers);
-      
+      // The API service sends just the role value
       await projectApiService.updateUserRole(projectId, userId, role);
       showAlert('success', 'User role updated successfully');
       
-      // Update the local state using proper immutable pattern
-      setProjectUsers(prev => {
-        // Create a new array with updated role
-        const updated = prev.map(pu => {
-          if (pu.user.id === userId) {
-            // Important: Create a completely new object with the updated role
-            // The role is an object with a role property
-            return {
-              ...pu,
-              role:  role 
-            };
-          }
-          return pu;
-        });
-        
-        console.log("Updated project users after role change:", updated);
-        return updated;
-      });
+      // Fetch updated project users rather than trying to update the state manually
+      // This ensures the data structure matches what the API returns
+      await fetchProjectUsers();
       
       return true;
     } catch (err) {
@@ -105,10 +79,10 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, projectUsers, showAlert]);
+  }, [projectId, showAlert, isLoggingOut, fetchProjectUsers]);
 
   const removeUserFromProject = useCallback(async (userId: string) => {
-    if (!projectId || !userId) return false;
+    if (!projectId || !userId || isLoggingOut) return false;
     
     try {
       setIsLoading(true);
@@ -128,7 +102,7 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, showAlert]);
+  }, [projectId, showAlert, isLoggingOut]);
 
   return {
     projectUsers,

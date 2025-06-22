@@ -12,9 +12,8 @@ export const useProjects = () => {
   const { isLoggingOut } = useAuth();
 
   const fetchProjects = useCallback(async () => {
-
-    if (isLoggingOut) return [];// TODO more elegant solution needed
-
+    if (isLoggingOut) return [];
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -29,11 +28,10 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert]);
+  }, [showAlert, isLoggingOut]);
 
   const getProjectById = useCallback(async (id: string) => {
-
-    if (isLoggingOut) null;// TODO more elegant solution needed
+    if (isLoggingOut) return null;
     
     try {
       setIsLoading(true);
@@ -48,9 +46,11 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert]);
+  }, [showAlert, isLoggingOut]);
 
   const createProject = useCallback(async (projectData: Omit<Project, 'id'>) => {
+    if (isLoggingOut) return null;
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -66,9 +66,11 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert]);
+  }, [showAlert, isLoggingOut]);
 
   const updateProject = useCallback(async (id: string, projectData: Partial<Project>) => {
+    if (isLoggingOut) return null;
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -86,9 +88,11 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert]);
+  }, [showAlert, isLoggingOut]);
 
   const deleteProject = useCallback(async (id: string) => {
+    if (isLoggingOut) return false;
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -104,7 +108,7 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert]);
+  }, [showAlert, isLoggingOut]);
 
   return {
     projects,

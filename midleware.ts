@@ -20,6 +20,22 @@ function decodeJWT(token: string): any {
   }
 }
 
+// Check if token is expired
+function isTokenExpired(token: string): boolean {
+  try {
+    const decoded = decodeJWT(token);
+    if (!decoded) return true;
+    
+    // Get current time in seconds
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Check if token is expired (with 30 seconds buffer)
+    return decoded.exp <= now + 30;
+  } catch (e) {
+    return true;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   // Get the pathname of the request
   const path = request.nextUrl.pathname;
@@ -27,7 +43,7 @@ export async function middleware(request: NextRequest) {
   // Check if the path is a protected route
   const isProtectedRoute = !path.startsWith('/login') && 
                           !path.startsWith('/_next') && 
-                          !path.startsWith('/api') &&
+                          !path.startsWith('/api/') && 
                           !path.startsWith('/favicon.ico');
                           
   // Admin-only routes
@@ -38,11 +54,12 @@ export async function middleware(request: NextRequest) {
   // User project route (this is where we redirect non-admins after login)
   const isUserProjectRoute = path === '/my-projects';
 
-  // Get the token from the cookies
-  const token = request.cookies.get('access_token')?.value;
+  // Get the tokens from the cookies
+  const accessToken = request.cookies.get('access_token')?.value;
+  const refreshToken = request.cookies.get('refresh_token')?.value;
 
   // If it's a protected route and no token exists, redirect to login
-  if (isProtectedRoute && !token) {
+  if (isProtectedRoute && !accessToken) {
     const loginUrl = new URL('/login', request.url);
     
     // Add the current path as a "from" param to redirect back after login
@@ -51,12 +68,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If we have a token, check roles for certain routes
-  if (token && isAdminRoute) {
+  // If we have a token but it's expired, redirect to login
+  // Client-side code will handle token refresh when possible
+  if (isProtectedRoute && accessToken && isTokenExpired(accessToken) && !refreshToken) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('from', path);
+    loginUrl.searchParams.set('session_expired', 'true');
+    
+    const response = NextResponse.redirect(loginUrl);
+    
+    // Clear invalid tokens
+    response.cookies.delete('access_token');
+    response.cookies.delete('refresh_token');
+    
+    return response;
+  }
+
+  // If we have a valid token, check roles for certain routes
+  if (accessToken && isAdminRoute) {
     try {
       // Attempt to get user info from token
-      // In real production code, you'd verify the token signature here
-      const decoded = decodeJWT(token);
+      const decoded = decodeJWT(accessToken);
       
       if (!decoded) {
         throw new Error('Invalid token');
@@ -69,7 +101,7 @@ export async function middleware(request: NextRequest) {
       // For this middleware, we can make a request to the API
       const response = await fetch(`${request.nextUrl.origin}/api/check-admin?userId=${userId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
       

@@ -7,15 +7,17 @@ import {
   deleteWorkspace 
 } from '@/services/workspaceApi';
 import { useAlert } from '@/contexts/AlertContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useWorkspaces = (projectId: string) => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
+  const { isLoggingOut } = useAuth();
 
   const fetchWorkspaces = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId || isLoggingOut) return;
     
     try {
       setIsLoading(true);
@@ -31,13 +33,15 @@ export const useWorkspaces = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, showAlert]);
+  }, [projectId, showAlert, isLoggingOut]);
 
   useEffect(() => {
     fetchWorkspaces();
   }, [fetchWorkspaces]);
 
   const addWorkspace = useCallback(async (workspace: Workspace) => {
+    if (isLoggingOut) return;
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -51,9 +55,11 @@ export const useWorkspaces = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, fetchWorkspaces, showAlert]);
+  }, [projectId, fetchWorkspaces, showAlert, isLoggingOut]);
 
   const removeWorkspace = useCallback(async (workspaceId: number) => {
+    if (isLoggingOut) return;
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -67,7 +73,7 @@ export const useWorkspaces = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchWorkspaces, showAlert]);
+  }, [fetchWorkspaces, showAlert, isLoggingOut]);
 
   return {
     workspaces,

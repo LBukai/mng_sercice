@@ -106,6 +106,20 @@ const authApiService = {
     return !!localStorage.getItem('access_token');
   },
 
+  // Check if token is expired
+  isTokenExpired: (token: string | null): boolean => {
+    if (!token) return true;
+    
+    const decoded = decodeJWT(token);
+    if (!decoded) return true;
+    
+    // Get current time in seconds
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Check if token is expired (with 30 seconds buffer)
+    return decoded.exp <= now + 30;
+  },
+
   // Decode the JWT token to get user ID and other claims
   decodeToken: (token: string | null): DecodedToken | null => {
     return decodeJWT(token);
@@ -115,7 +129,6 @@ const authApiService = {
   getUserIdFromToken: (): string | null => {
     const token = localStorage.getItem('access_token');
     const decoded = decodeJWT(token);
-    console.log(decoded?.sub);
     return decoded?.sub || null;
   }
 };

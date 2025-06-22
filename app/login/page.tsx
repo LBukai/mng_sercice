@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export default function LoginPage() {
@@ -16,9 +17,18 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isAuthenticated, isAdmin } = useAuth();
+  const { showAlert } = useAlert();
   
   // Get the 'from' parameter to redirect after login
   const from = searchParams.get('from') || '/';
+  const sessionExpired = searchParams.get('session_expired') === 'true';
+
+  // Check if session expired and show an alert
+  useEffect(() => {
+    if (sessionExpired) {
+      showAlert('warning', 'Your session has expired. Please login again.');
+    }
+  }, [sessionExpired, showAlert]);
 
   // Check if user is already logged in
   useEffect(() => {

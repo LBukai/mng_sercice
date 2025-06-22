@@ -3,15 +3,17 @@ import { useState, useCallback, useEffect } from 'react';
 import { ProjectFile } from '../types/file';
 import workspaceFileApiService from '../services/workspaceFileApi';
 import { useAlert } from '../contexts/AlertContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useWorkspaceFiles = (workspaceId: number) => {
   const [files, setFiles] = useState<ProjectFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
+  const { isLoggingOut } = useAuth();
 
   const fetchFiles = useCallback(async () => {
-    if (!workspaceId) return;
+    if (!workspaceId || isLoggingOut) return;
     
     setLoading(true);
     setError(null);
@@ -25,10 +27,10 @@ export const useWorkspaceFiles = (workspaceId: number) => {
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, showAlert]);
+  }, [workspaceId, showAlert, isLoggingOut]);
 
   const addFiles = useCallback(async (fileIds: string[]): Promise<boolean> => {
-    if (!workspaceId || fileIds.length === 0) return false;
+    if (!workspaceId || fileIds.length === 0 || isLoggingOut) return false;
     
     setLoading(true);
     try {
@@ -43,10 +45,10 @@ export const useWorkspaceFiles = (workspaceId: number) => {
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, fetchFiles, showAlert]);
+  }, [workspaceId, fetchFiles, showAlert, isLoggingOut]);
 
   const removeFile = useCallback(async (fileId: string) => {
-    if (!workspaceId) return false;
+    if (!workspaceId || isLoggingOut) return false;
     
     try {
       await workspaceFileApiService.removeFileFromWorkspace(workspaceId, fileId);
@@ -58,7 +60,7 @@ export const useWorkspaceFiles = (workspaceId: number) => {
       showAlert('error', errorMessage);
       return false;
     }
-  }, [workspaceId, showAlert]);
+  }, [workspaceId, showAlert, isLoggingOut]);
 
   useEffect(() => {
     if (workspaceId) {
