@@ -82,8 +82,7 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
     if (validateForm()) {
       // For editing, remove password if it's empty
       if (isEditMode && !formData.password) {
-        // Using object destructuring without assigning to avoid unused variable
-        const { ...userDataWithoutPassword } = formData;
+        const { password, ...userDataWithoutPassword } = formData;
         onSubmit(userDataWithoutPassword);
       } else {
         onSubmit(formData);

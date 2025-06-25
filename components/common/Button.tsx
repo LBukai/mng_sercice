@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import { LinkProps } from 'next/link';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
@@ -14,30 +13,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-// Define specific props for LinkButton
-interface LinkButtonProps {
+interface LinkButtonProps extends Omit<ButtonProps, 'type'> {
   href: string;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-  fullWidth?: boolean;
-  className?: string;
-  children?: React.ReactNode;
-  // Add any other anchor-compatible props you need
-  target?: string;
-  rel?: string;
-  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
-  onMouseOver?: React.MouseEventHandler<HTMLAnchorElement>;
-  onFocus?: React.FocusEventHandler<HTMLAnchorElement>;
-  // Add LinkProps excluding "href" which we already have
-  as?: LinkProps['as'];
-  replace?: LinkProps['replace'];
-  scroll?: LinkProps['scroll'];
-  shallow?: LinkProps['shallow'];
-  passHref?: LinkProps['passHref'];
-  prefetch?: LinkProps['prefetch'];
-  locale?: LinkProps['locale'];
 }
 
 export const Button = ({ 

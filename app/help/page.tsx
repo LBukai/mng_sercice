@@ -105,7 +105,7 @@ export default function HelpPage() {
           
           {filteredFAQs.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
-              No results found for &quot;{searchTerm}&quot;. Try a different search term.
+              No results found for "{searchTerm}". Try a different search term.
             </div>
           ) : (
             filteredFAQs.map((faq, index) => (

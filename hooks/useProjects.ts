@@ -1,23 +1,20 @@
 import { useState, useCallback } from 'react';
 import { Project } from '@/types/project';
-import { projectApiService } from '@/services/projectApi';
 import { useAlert } from '@/contexts/AlertContext';
-import { useAuth } from '@/contexts/AuthContext';
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
-  const { isLoggingOut } = useAuth();
 
   const fetchProjects = useCallback(async () => {
-    if (isLoggingOut) return [];
-    
     try {
       setIsLoading(true);
       setError(null);
-      const data = await projectApiService.getProjects();
+      const res = await fetch('/api/projects')
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load projects');
       setProjects(data);
       return data;
     } catch (err) {
@@ -28,15 +25,15 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert, isLoggingOut]);
+  }, [showAlert]);
 
   const getProjectById = useCallback(async (id: string) => {
-    if (isLoggingOut) return null;
-    
     try {
       setIsLoading(true);
       setError(null);
-      const data = await projectApiService.getProjectById(id);
+      const res = await fetch(`/api/projects/${id}`)
+      const data =await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load project');
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -46,18 +43,18 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert, isLoggingOut]);
+  }, [showAlert]);
 
   const createProject = useCallback(async (projectData: Omit<Project, 'id'>) => {
-    if (isLoggingOut) return null;
-    
     try {
       setIsLoading(true);
       setError(null);
-      const newProject = await projectApiService.createProject(projectData);
-      setProjects(prev => [...prev, newProject]);
+      const res = await fetch(`/api/projects`, { method: 'POST', body: JSON.stringify(projectData) })
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create project');
+      setProjects(prev => [...prev, data]);
       showAlert('success', 'Project created successfully');
-      return newProject;
+      return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
@@ -66,20 +63,20 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert, isLoggingOut]);
+  }, [showAlert]);
 
   const updateProject = useCallback(async (id: string, projectData: Partial<Project>) => {
-    if (isLoggingOut) return null;
-    
     try {
       setIsLoading(true);
       setError(null);
-      const updatedProject = await projectApiService.updateProject(id, projectData);
+      const res = await fetch(`/api/projects/${id}`, { method: 'PATCH', body: JSON.stringify(projectData) })
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update project');
       setProjects(prev => 
-        prev.map(project => project.id === id ? { ...project, ...updatedProject } : project)
+        prev.map(project => project.id === id ? { ...project, ...data } : project)
       );
       showAlert('success', 'Project updated successfully');
-      return updatedProject;
+      return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
@@ -88,15 +85,14 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert, isLoggingOut]);
+  }, [showAlert]);
 
   const deleteProject = useCallback(async (id: string) => {
-    if (isLoggingOut) return false;
-    
     try {
       setIsLoading(true);
       setError(null);
-      await projectApiService.deleteProject(id);
+      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete project');
       setProjects(prev => prev.filter(project => project.id !== id));
       showAlert('success', 'Project deleted successfully');
       return true;
@@ -108,7 +104,7 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [showAlert, isLoggingOut]);
+  }, [showAlert]);
 
   return {
     projects,

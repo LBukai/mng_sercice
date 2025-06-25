@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { User } from '@/types/user';
-import { apiService } from '@/services/api';
+import { getUserById, updateUser } from '@/services/userApi';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useAlert } from '@/contexts/AlertContext';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ export default function EditUserPage() {
   const { showAlert } = useAlert();
   const userId = params.id as string;
   
+  const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<User>({
     id: '',
     name: '',
@@ -35,7 +36,8 @@ export default function EditUserPage() {
     const fetchUser = async () => {
       try {
         setIsLoading(true);
-        const data = await apiService.getUserById(userId);
+        const data = await getUserById(userId);
+        setUser(data);
         setFormData(data);
         setError(null);
       } catch (err) {
@@ -109,7 +111,7 @@ export default function EditUserPage() {
     
     try {
       setIsSaving(true);
-      await apiService.updateUser(userId, formData);
+      await updateUser(userId, formData);
       showAlert('success', 'User updated successfully');
       router.push(`/users/${userId}`);
     } catch (err) {

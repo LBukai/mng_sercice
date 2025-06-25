@@ -6,6 +6,7 @@ import { User } from '@/types/user';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useUsers } from '@/hooks/useUsers';
 import { UserBadge } from '@/components/users/UserBadge';
+import { Button, LinkButton } from '@/components/common/Button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import Link from 'next/link';
 
@@ -21,11 +22,9 @@ export default function UserDetailsPage() {
     const fetchUser = async () => {
       if (userId) {
         const userData = await getUserById(userId);
-        if (userData && typeof userData === 'object' && !Array.isArray(userData) && 'id' in userData) {
-          setUser(userData as User);
-        } else {
-          setUser(null);
-}
+        if (userData) {
+          setUser(userData);
+        }
       }
     };
 

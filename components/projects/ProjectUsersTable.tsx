@@ -1,4 +1,3 @@
-// components/projects/ProjectUsersTable.tsx
 import { useState } from 'react';
 import { ProjectUser } from '@/types/projectUser';
 import { ProjectRole } from '@/types/projectUser';
@@ -21,32 +20,14 @@ export const ProjectUsersTable = ({
 }: ProjectUsersTableProps) => {
   const [userToEdit, setUserToEdit] = useState<ProjectUser | null>(null);
   const [userToRemove, setUserToRemove] = useState<ProjectUser | null>(null);
-  const [selectedRole, setSelectedRole] = useState<ProjectRole>('User');
-
-  // Define valid role options to ensure consistency
-  const roleOptions: { value: ProjectRole; label: string }[] = [
-    { value: 'Project Lead', label: 'Project Lead' },
-    { value: 'User', label: 'User' }
-  ];
+  const [selectedRole, setSelectedRole] = useState<ProjectRole>('user');
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newRole = e.target.value;
-    
-    // Validate that the selected role is valid
-    const isValidRole = roleOptions.some(option => option.value === newRole);
-    
-    if (isValidRole) {
-      setSelectedRole(newRole as ProjectRole);
-    } else {
-      console.warn('Invalid role selected:', newRole);
-      // Fallback to 'user' if invalid role
-      setSelectedRole('User');
-    }
+    setSelectedRole(e.target.value as ProjectRole);
   };
 
   const handleUpdateRole = () => {
-    if (userToEdit && userToEdit.user.id && selectedRole) {
-      console.log('Updating role to:', selectedRole); // Debug log
+    if (userToEdit && userToEdit.user.id) {
       onUpdateRole(userToEdit.user.id, selectedRole);
       setUserToEdit(null);
     }
@@ -61,27 +42,16 @@ export const ProjectUsersTable = ({
 
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
-      case 'Project Lead':
+      case 'project_lead':
         return 'bg-blue-100 text-blue-800';
-      case 'User':
+      case 'admin':
+        return 'bg-purple-100 text-purple-800';
+      case 'user':
         return 'bg-green-100 text-green-800';
+      case 'viewer':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const handleEditRole = (projectUser: ProjectUser) => {
-    setUserToEdit(projectUser);
-    
-    // Ensure the selected role is valid, fallback to 'user' if not
-    const currentRole = projectUser.role;
-    const isValidRole = roleOptions.some(option => option.value === currentRole);
-    
-    if (isValidRole) {
-      setSelectedRole(currentRole);
-    } else {
-      console.warn('Invalid current role:', currentRole, 'defaulting to user');
-      setSelectedRole('User');
     }
   };
 
@@ -104,7 +74,11 @@ export const ProjectUsersTable = ({
           </thead>
           <tbody className="text-gray-600 text-sm">
             {isLoading ? (
-              <SkeletonLoader type="table-row" count={3} />
+              <tr>
+
+                  <SkeletonLoader type="table-row" count={3} />
+
+              </tr>
             ) : projectUsers.length > 0 ? (
               projectUsers.map((projectUser) => (
                 <tr key={projectUser.user.id} className="border-b border-gray-200 hover:bg-gray-50">
@@ -121,8 +95,8 @@ export const ProjectUsersTable = ({
                     {projectUser.user.email}
                   </td>
                   <td className="py-3 px-6 text-center">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClass(projectUser.role)}`}>
-                      {projectUser.role}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClass(projectUser.role.role)}`}>
+                      {projectUser.role.role}
                     </span>
                   </td>
                   <td className="py-3 px-6 text-center">
@@ -132,7 +106,10 @@ export const ProjectUsersTable = ({
                     <div className="flex justify-end gap-2">
                       <button
                         className="text-blue-600 hover:text-blue-900"
-                        onClick={() => handleEditRole(projectUser)}
+                        onClick={() => {
+                          setUserToEdit(projectUser);
+                          setSelectedRole(projectUser.role.role);
+                        }}
                       >
                         Change Role
                       </button>
@@ -182,17 +159,11 @@ export const ProjectUsersTable = ({
                   onChange={handleRoleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {roleOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <option value="project_lead">Project Lead</option>
+                  <option value="admin">Admin</option>
+                  <option value="user">User</option>
+                  <option value="viewer">Viewer</option>
                 </select>
-              </div>
-              
-              {/* Debug info - remove in production */}
-              <div className="text-xs text-gray-400">
-                Current role: {userToEdit.role} | Selected: {selectedRole}
               </div>
               
               <div className="flex justify-end space-x-3 pt-4">
@@ -204,8 +175,7 @@ export const ProjectUsersTable = ({
                 </button>
                 <button
                   onClick={handleUpdateRole}
-                  disabled={!selectedRole}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   Update Role
                 </button>

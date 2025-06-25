@@ -1,19 +1,18 @@
-// types/projectUser.ts
 import { User } from '@/types/user';
 
-export type ProjectRole = 'Project Lead' | 'User';
+export type ProjectRole = 'project_lead' | 'user' /*| 'admin' | 'viewer'*/;
 
 export interface ProjectRoleDefinition {
-  role: string;
+  role: ProjectRole;
 }
 
 export interface UserAndRole {
   user?: User;
   user_id?: string;
-  role: ProjectRole;
+  role: ProjectRoleDefinition | ProjectRole;
 }
 
 export interface ProjectUser {
   user: User;
-  role: ProjectRole;
+  role: ProjectRoleDefinition;
 }

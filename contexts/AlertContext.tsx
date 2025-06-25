@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { Alert, AlertType } from '@/components/common/Alert';
 
 interface AlertContextProps {
@@ -28,7 +28,7 @@ export const AlertProvider = ({ children }: AlertProviderProps) => {
     duration: number;
   } | null>(null);
 
-  const showAlert = (
+  const showAlert = useCallback((
     type: AlertType,
     message: string,
     autoClose = true,
@@ -41,7 +41,7 @@ export const AlertProvider = ({ children }: AlertProviderProps) => {
       autoClose,
       duration,
     });
-  };
+  }, []);
 
   const hideAlert = () => {
     setAlertConfig(null);

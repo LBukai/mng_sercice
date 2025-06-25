@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ProjectUsersTable } from '@/components/projects/ProjectUsersTable';
 import { AddProjectUsersForm } from '@/components/projects/AddProjectUsersForm';
@@ -9,11 +9,12 @@ import { useProjectUsers } from '@/hooks/useProjectUsers';
 import { useProjects } from '@/hooks/useProjects';
 import { Modal } from '@/components/common/Modal';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { ProjectRole, UserAndRole } from '@/types/projectUser';
+import { ProjectRole } from '@/types/projectUser';
 import Link from 'next/link';
 
 export default function ProjectUsersPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.id as string;
   
   const [showAddUsersModal, setShowAddUsersModal] = useState(false);
@@ -52,7 +53,7 @@ export default function ProjectUsersPage() {
     }
   }, [projectId, fetchProjectUsers, getProjectById]);
 
-  const handleAddUsers = async (usersData: UserAndRole[]) => {
+  const handleAddUsers = async (usersData) => {
     const success = await addUsersToProject(usersData);
     if (success) {
       setShowAddUsersModal(false);

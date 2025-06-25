@@ -1,141 +1,107 @@
-// components/common/SkeletonLoader.tsx
 import React from 'react';
 
-type SkeletonType = 'card' | 'text' | 'table-row' | 'table-rows' | 'image' | 'avatar';
-
 interface SkeletonLoaderProps {
-  type: SkeletonType;
+  type: 'text' | 'circle' | 'rectangle' | 'table-row' | 'card';
   count?: number;
   className?: string;
+  width?: string;
+  height?: string;
+  animate?: boolean;
 }
 
-export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ 
-  type, 
-  count = 1, 
-  className = '' 
+export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
+  type,
+  count = 1,
+  className = '',
+  width,
+  height,
+  animate = true,
 }) => {
-  // Create an array from count
-  const items = Array.from({ length: count }, (_, i) => i);
+  const baseClass = 'bg-gray-200 rounded';
+  const animationClass = animate ? 'animate-pulse' : '';
+  const style: React.CSSProperties = {};
   
-  // Function to create different skeleton items based on type
-  const createSkeletonItem = (index: number) => {
+  if (width) style.width = width;
+  if (height) style.height = height;
+  
+  // Helper to create a skeleton item based on type
+  const createSkeletonItem = (key: number) => {
     switch (type) {
-      case 'card':
-        return (
-          <div 
-            key={index}
-            className={`animate-pulse rounded-lg bg-white p-4 shadow ${className}`}
-          >
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-          </div>
-        );
-        
       case 'text':
         return (
-          <div key={index} className={`animate-pulse ${className}`}>
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-          </div>
+          <div 
+            key={key}
+            className={`${baseClass} ${animationClass} h-4 my-2 ${className}`}
+            style={style}
+          ></div>
         );
-        
-      case 'table-row':
-        // This is for a SINGLE table row
+      case 'circle':
         return (
-          <tr key={index} className={`animate-pulse ${className}`}>
-            <td className="py-3 px-6 border-b border-gray-200">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div 
+            key={key}
+            className={`${baseClass} ${animationClass} rounded-full ${className}`}
+            style={{ ...style, aspectRatio: '1/1' }}
+          ></div>
+        );
+      case 'rectangle':
+        return (
+          <div 
+            key={key}
+            className={`${baseClass} ${animationClass} ${className}`}
+            style={style}
+          ></div>
+        );
+      case 'table-row':
+        return (
+          <tr key={key} className={animationClass}>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className={`${baseClass} h-4 w-12`}></div>
             </td>
-            <td className="py-3 px-6 border-b border-gray-200">
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className={`${baseClass} h-4 w-32`}></div>
             </td>
-            <td className="py-3 px-6 border-b border-gray-200">
-              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className={`${baseClass} h-4 w-24`}></div>
             </td>
-            <td className="py-3 px-6 border-b border-gray-200">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className={`${baseClass} h-4 w-40`}></div>
             </td>
-            <td className="py-3 px-6 border-b border-gray-200">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <td className="px-6 py-4 whitespace-nowrap text-center">
+              <div className={`${baseClass} h-4 w-12 mx-auto`}></div>
             </td>
-            <td className="py-3 px-6 border-b border-gray-200">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            </td>
-            <td className="py-3 px-6 border-b border-gray-200">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <td className="px-6 py-4 whitespace-nowrap text-right">
+              <div className="flex justify-end gap-2">
+                <div className={`${baseClass} h-4 w-10`}></div>
+                <div className={`${baseClass} h-4 w-14`}></div>
+              </div>
             </td>
           </tr>
         );
-        
-      case 'table-rows':
-        // NEW TYPE: This returns a React Fragment with multiple rows
-        // Use this when you need to add skeleton rows directly to a tbody
+      case 'card':
         return (
-          <React.Fragment key={index}>
-            {Array.from({ length: count }, (_, i) => (
-              <tr key={`row-${i}`} className={`animate-pulse ${className}`}>
-                <td className="py-3 px-6 border-b border-gray-200">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                </td>
-                <td className="py-3 px-6 border-b border-gray-200">
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </td>
-                <td className="py-3 px-6 border-b border-gray-200">
-                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                </td>
-                <td className="py-3 px-6 border-b border-gray-200">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </td>
-                <td className="py-3 px-6 border-b border-gray-200">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </td>
-                <td className="py-3 px-6 border-b border-gray-200">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </td>
-                <td className="py-3 px-6 border-b border-gray-200">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </td>
-              </tr>
-            ))}
-          </React.Fragment>
+          <div key={key} className={`${baseClass} p-4 rounded-lg ${animationClass} ${className}`} style={style}>
+            <div className={`${baseClass} h-6 w-3/4 mb-4`}></div>
+            <div className={`${baseClass} h-4 w-full mb-2`}></div>
+            <div className={`${baseClass} h-4 w-full mb-2`}></div>
+            <div className={`${baseClass} h-4 w-2/3 mb-4`}></div>
+            <div className="flex justify-end">
+              <div className={`${baseClass} h-8 w-24 rounded-md`}></div>
+            </div>
+          </div>
         );
-        
-      case 'image':
-        return (
-          <div 
-            key={index}
-            className={`animate-pulse bg-gray-200 rounded ${className}`}
-            style={{ height: '200px' }}
-          ></div>
-        );
-        
-      case 'avatar':
-        return (
-          <div 
-            key={index}
-            className={`animate-pulse bg-gray-200 rounded-full h-12 w-12 ${className}`}
-          ></div>
-        );
-        
       default:
-        return <div key={index} className="animate-pulse h-4 bg-gray-200 rounded"></div>;
+        return (
+          <div 
+            key={key}
+            className={`${baseClass} ${animationClass} ${className}`}
+            style={style}
+          ></div>
+        );
     }
   };
-
-  // For table-rows type (special case), we return just a single Fragment
-  if (type === 'table-rows') {
-    return createSkeletonItem(0);
-  }
   
-  // For all other types, we return multiple items based on count
-  return (
-    <>
-      {items.map((i) => createSkeletonItem(i))}
-    </>
-  );
+  // Create an array of skeleton items
+  const skeletonItems = Array.from({ length: count }, (_, i) => createSkeletonItem(i));
+  
+  return <>{skeletonItems}</>;
 };

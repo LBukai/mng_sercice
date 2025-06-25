@@ -1,11 +1,10 @@
 // components/layout/AuthLayoutWrapper.tsx
 'use client';
 
-import { useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { useSession } from 'next-auth/react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface AuthLayoutWrapperProps {
@@ -13,29 +12,13 @@ interface AuthLayoutWrapperProps {
 }
 
 export const AuthLayoutWrapper = ({ children }: AuthLayoutWrapperProps) => {
-  const { isAuthenticated, isLoading, isAdmin } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
+  const session = useSession()
   
   // Don't show the authenticated layout on the login page
   const isLoginPage = pathname === '/login';
-  
-  // Define admin-only routes
-  const isAdminRoute = pathname === '/' || // Dashboard
-                       pathname.startsWith('/users') || // User management
-                       (pathname.startsWith('/projects') && !pathname.startsWith('/projects/') && pathname !== '/my-projects'); // Project listing, not details
-  
-  // Check if user has necessary permissions
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      // If trying to access admin route but not admin, redirect
-      if (isAdminRoute && !isAdmin) {
-        router.push('/my-projects');
-      }
-    }
-  }, [isLoading, isAuthenticated, isAdmin, isAdminRoute, pathname, router]);
-  
-  if (isLoading) {
+
+    if (session.status === 'loading') {
     return (
       <div className="flex h-screen items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -43,8 +26,8 @@ export const AuthLayoutWrapper = ({ children }: AuthLayoutWrapperProps) => {
     );
   }
   
-  // For login page, show simple layout without sidebar
-  if (isLoginPage || !isAuthenticated) {
+  // For login page or when not authenticated, show simple layout
+  if (isLoginPage || session.status !== 'authenticated') {
     return <>{children}</>;
   }
   

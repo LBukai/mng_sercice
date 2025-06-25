@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { UserTable } from '@/components/users/UserTable';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUsers } from '@/hooks/useUsers';
 
 export default function UsersPage() {

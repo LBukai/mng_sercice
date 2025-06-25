@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from "react";
+import Link from "next/link";
+import authApiService from "@/services/authApi";
+import { signOut, useSession } from "next-auth/react";
 
 export const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const session = useSession();
+  const user = session.data?.user;
 
   return (
     <header className="bg-white shadow-sm z-10">
@@ -12,10 +14,12 @@ export const Header = () => {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">Management Service</h1>
+              <h1 className="text-xl font-bold text-gray-900">
+                Management Service
+              </h1>
             </div>
           </div>
-          
+
           <div className="flex items-center">
             <div className="ml-4 flex items-center md:ml-6">
               {/* Notifications */}
@@ -54,7 +58,9 @@ export const Header = () => {
                   >
                     <span className="sr-only">Open user menu</span>
                     <div className="h-8 w-8 rounded-full bg-blue-500 text-white flex items-center justify-center">
-                      {user ? user.name.charAt(0).toUpperCase() : (
+                      {user?.name ? (
+                        user.name.charAt(0).toUpperCase()
+                      ) : (
                         <svg
                           className="h-5 w-5"
                           xmlns="http://www.w3.org/2000/svg"
@@ -86,7 +92,9 @@ export const Header = () => {
                       <>
                         <div className="block px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
                           <div className="font-medium">{user.name}</div>
-                          <div className="text-gray-500 truncate">{user.email}</div>
+                          <div className="text-gray-500 truncate">
+                            {user.email}
+                          </div>
                         </div>
                         <Link
                           href="/profile"
@@ -105,9 +113,12 @@ export const Header = () => {
                           Settings
                         </Link>
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setIsDropdownOpen(false);
-                            logout();
+                            await signOut();
+
+                            // FIXME: remove when backend implemented oAuth logic
+                            authApiService.clearTokens();
                           }}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           role="menuitem"

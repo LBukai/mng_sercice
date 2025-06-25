@@ -1,8 +1,7 @@
-// components/projects/AddProjectUsersForm.tsx
 import { useState, useEffect } from 'react';
 import { User } from '@/types/user';
 import { UserAndRole, ProjectRole } from '@/types/projectUser';
-import { apiService } from '@/services/api';
+import { getUsers } from '@/services/userApi';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 interface AddProjectUsersFormProps {
@@ -13,6 +12,7 @@ interface AddProjectUsersFormProps {
 }
 
 export const AddProjectUsersForm = ({ 
+  projectId, 
   existingUsers, 
   onSubmit, 
   onCancel 
@@ -21,7 +21,7 @@ export const AddProjectUsersForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState<ProjectRole>('User');
+  const [selectedRole, setSelectedRole] = useState<ProjectRole>('user');
 
   // Fetch all users
   useEffect(() => {
@@ -29,7 +29,7 @@ export const AddProjectUsersForm = ({
       try {
         setIsLoading(true);
         setError(null);
-        const users = await apiService.getUsers();
+        const users = await getUsers();
         
         // Filter out users that are already in the project
         const availableUsers = users.filter(user => !existingUsers.includes(user.id as string));

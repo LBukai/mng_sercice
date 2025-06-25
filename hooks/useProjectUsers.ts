@@ -1,24 +1,22 @@
 import { useState, useCallback } from 'react';
-import { projectApiService } from '@/services/projectApi';
 import { useAlert } from '@/contexts/AlertContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { UserAndRole, ProjectRole, ProjectUser, ProjectRoleDefinition } from '@/types/projectUser';
+import { UserAndRole, ProjectRole, ProjectUser } from '@/types/projectUser';
 
 export const useProjectUsers = (projectId: string) => {
   const [projectUsers, setProjectUsers] = useState<ProjectUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
-  const { isLoggingOut } = useAuth();
 
   const fetchProjectUsers = useCallback(async () => {
-    if (!projectId || isLoggingOut) return [];
+    if (!projectId) return [];
     
     try {
       setIsLoading(true);
       setError(null);
-      const data = await projectApiService.getProjectUsers(projectId);
-      console.log("TEST", "useProjectUsers", data);
+      const res = await fetch(`/api/projects/${projectId}/users`);
+      const data =await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load project users');
       if(!data){
         setProjectUsers(<ProjectUser[]>([]));
         return <ProjectUser[]>([]);
@@ -33,15 +31,17 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, showAlert, isLoggingOut]);
+  }, [projectId, showAlert]);
 
   const addUsersToProject = useCallback(async (usersData: UserAndRole[]) => {
-    if (!projectId || isLoggingOut) return false;
+    if (!projectId) return false;
     
     try {
       setIsLoading(true);
       setError(null);
-      await projectApiService.addUsersToProject(projectId, usersData);
+      const res = await fetch(`/api/projects/${projectId}/users`, { method: 'POST', body: JSON.stringify(usersData) })
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to add users');
       showAlert('success', 'Users added to project successfully');
       // Refresh the project users list
       await fetchProjectUsers();
@@ -54,21 +54,26 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, fetchProjectUsers, showAlert, isLoggingOut]);
+  }, [projectId, fetchProjectUsers, showAlert]);
 
   const updateUserRole = useCallback(async (userId: string, role: ProjectRole) => {
-    if (!projectId || !userId || isLoggingOut) return false;
+    if (!projectId || !userId) return false;
     
     try {
       setIsLoading(true);
       setError(null);
-      // The API service sends just the role value
-      await projectApiService.updateUserRole(projectId, userId, role);
+      const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { method: 'PATCH', body: JSON.stringify(role) })
+      if (!res.ok) throw new Error('Failed to update user role');
       showAlert('success', 'User role updated successfully');
       
-      // Fetch updated project users rather than trying to update the state manually
-      // This ensures the data structure matches what the API returns
-      await fetchProjectUsers();
+      // Update the local state
+      setProjectUsers(prev => 
+        prev.map(pu => 
+          pu.user.id === userId 
+            ? { ...pu, role: { role } } 
+            : pu
+        )
+      );
       
       return true;
     } catch (err) {
@@ -79,15 +84,16 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, showAlert, isLoggingOut, fetchProjectUsers]);
+  }, [projectId, showAlert]);
 
   const removeUserFromProject = useCallback(async (userId: string) => {
-    if (!projectId || !userId || isLoggingOut) return false;
+    if (!projectId || !userId) return false;
     
     try {
       setIsLoading(true);
       setError(null);
-      await projectApiService.removeUserFromProject(projectId, userId);
+      const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to remove user from project');
       showAlert('success', 'User removed from project successfully');
       
       // Update the local state
@@ -102,7 +108,7 @@ export const useProjectUsers = (projectId: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, showAlert, isLoggingOut]);
+  }, [projectId, showAlert]);
 
   return {
     projectUsers,

@@ -1,52 +1,54 @@
 // services/projectApi.ts
-import { Project } from '@/types/project';
-import { UserAndRole, ProjectRole, ProjectUser } from '@/types/projectUser';
-import authApiService from './authApi';
+"use server";
 
-const API_BASE_URL = 'http://localhost:8080';
+import { Project } from "@/types/project";
+import { UserAndRole, ProjectRole, ProjectUser } from "@/types/projectUser";
+import { auth } from "@/app/auth";
 
-const getAuthHeaders = () => {
-  const token = authApiService.getAccessToken();
+const API_BASE_URL = "http://localhost:8080";
+
+const getAuthHeaders = async () => {
+  const session = await auth();
   return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
+    "Content-Type": "application/json",
+    Authorization: session?.sessionToken
+      ? `Bearer ${session.sessionToken}`
+      : "",
   };
 };
 
-export const projectApiService = {
-  // Get all projects
-  getProjects: async (): Promise<Project[]> => {
+export async function getProjects(): Promise<Project[]> {
+  const head = await getAuthHeaders();
+
+  const response = await fetch(`${API_BASE_URL}/projects`, {
+    method: "GET",
+    headers: head,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch projects: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function getProjectById(id: string): Promise<Project> {
+  const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
+    method: "GET",
+    headers: await getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch project: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function createProject(projectData: Omit<Project, "id">): Promise<Project> {
     const response = await fetch(`${API_BASE_URL}/projects`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch projects: ${response.statusText}`);
-    }
-
-    return response.json();
-  },
-
-  // Get a project by ID
-  getProjectById: async (id: string): Promise<Project> => {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch project: ${response.statusText}`);
-    }
-
-    return response.json();
-  },
-
-  // Create a new project
-  createProject: async (projectData: Omit<Project, 'id'>): Promise<Project> => {
-    const response = await fetch(`${API_BASE_URL}/projects`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
+      method: "POST",
+      headers: await getAuthHeaders(),
       body: JSON.stringify(projectData),
     });
 
@@ -55,13 +57,15 @@ export const projectApiService = {
     }
 
     return response.json();
-  },
+}
 
-  // Update a project
-  updateProject: async (id: string, projectData: Partial<Project>): Promise<Project> => {
+export async function updateProject(
+    id: string,
+    projectData: Partial<Project>
+  ): Promise<Project> {
     const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
+      method: "PATCH",
+      headers: await getAuthHeaders(),
       body: JSON.stringify(projectData),
     });
 
@@ -70,85 +74,87 @@ export const projectApiService = {
     }
 
     return response.json();
-  },
+}
 
-  // Delete a project
-  deleteProject: async (id: string): Promise<void> => {
+export async function deleteProject(id: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
+      method: "DELETE",
+      headers: await getAuthHeaders(),
     });
 
     if (!response.ok) {
       throw new Error(`Failed to delete project: ${response.statusText}`);
     }
-  },
+}
 
-  // Get users for a project
-  getProjectUsers: async (projectId: string): Promise<ProjectUser[]> => {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/users`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
+export async function getProjectUsers(projectId: string): Promise<ProjectUser[]> {
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/users`,
+      {
+        method: "GET",
+        headers: await getAuthHeaders(),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch project users: ${response.statusText}`);
     }
 
     return response.json();
-  },
+}
 
-  // Add users to a project
-  addUsersToProject: async (projectId: string, usersData: UserAndRole[]): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/users`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(usersData),
-    });
+export async function addUsersToProject(
+    projectId: string,
+    usersData: UserAndRole[]
+  ): Promise<void> {
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/users`,
+      {
+        method: "POST",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify(usersData),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to add users to project: ${response.statusText}`);
     }
-  },
+}
 
-  // Update user role in a project
-  updateUserRole: async (projectId: string, userId: string, role: ProjectRole): Promise<void> => {
-    console.log("TEST api", role);
-    
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/users/${userId}`, {
-      method: 'PATCH',
-      headers: {
-        ...getAuthHeaders(),
-        'Content-Type': 'application/json', // This is crucial!
-      },
-      body: JSON.stringify({ role }),
-    });
-  
-    // Add error handling
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText,
-        sentRole: role
-      });
-      throw new Error(`Failed to update user role: ${response.status} ${response.statusText}`);
-    }
-  
-    // Log successful response for debugging
-    console.log('Role update successful:', { projectId, userId, role });
-  },
-
-  // Remove a user from a project
-  removeUserFromProject: async (projectId: string, userId: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/users/${userId}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    });
+export async function updateUserRole(
+    projectId: string,
+    userId: string,
+    role: ProjectRole
+  ): Promise<void> {
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/users/${userId}`,
+      {
+        method: "PATCH",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify({ role }),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`Failed to remove user from project: ${response.statusText}`);
+      throw new Error(`Failed to update user role: ${response.statusText}`);
     }
-  }
-};
+}
+
+export async function removeUserFromProject(
+    projectId: string,
+    userId: string
+  ): Promise<void> {
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/users/${userId}`,
+      {
+        method: "DELETE",
+        headers: await getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to remove user from project: ${response.statusText}`
+      );
+    }
+}

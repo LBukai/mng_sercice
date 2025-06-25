@@ -4,42 +4,7 @@ interface AuthTokens {
   refresh_token: string;
 }
 
-interface DecodedToken {
-  sub: string;
-  exp: number;
-  iat: number;
-  iss: string;
-  [key: string]: any;
-}
-
-// Helper function to decode JWT tokens without self-reference
-function decodeJWT(token: string | null): DecodedToken | null {
-  if (!token) return null;
-  
-  try {
-    // JWT tokens are three base64-encoded parts separated by dots
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    
-    // Decode the payload (middle part)
-    const payload = parts[1];
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
-}
-
-// Auth service object with all methods
-const authApiService = {
+export const authApiService = {
   login: async (username: string, password: string): Promise<AuthTokens> => {
     // Create the basic auth header
     const basicAuth = btoa(`${username}:${password}`);
@@ -65,19 +30,11 @@ const authApiService = {
     return data;
   },
 
-  // Store tokens in localStorage and cookies
+  // Store tokens in localStorage
   storeTokens: (tokens: AuthTokens) => {
-    // Store in localStorage for JavaScript access
+    console.log(tokens.access_token);
     localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('refresh_token', tokens.refresh_token);
-    
-    // Store in cookies for middleware access
-    // Set the cookie to expire in 24 hours
-    const expires = new Date();
-    expires.setTime(expires.getTime() + 24 * 60 * 60 * 1000);
-    
-    document.cookie = `access_token=${tokens.access_token}; expires=${expires.toUTCString()}; path=/`;
-    document.cookie = `refresh_token=${tokens.refresh_token}; expires=${expires.toUTCString()}; path=/`;
   },
 
   // Get the current access token
@@ -92,44 +49,13 @@ const authApiService = {
 
   // Clear all tokens (logout)
   clearTokens: () => {
-    // Remove from localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    
-    // Remove from cookies
-    document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
   },
 
   // Check if user is logged in
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem('access_token');
-  },
-
-  // Check if token is expired
-  isTokenExpired: (token: string | null): boolean => {
-    if (!token) return true;
-    
-    const decoded = decodeJWT(token);
-    if (!decoded) return true;
-    
-    // Get current time in seconds
-    const now = Math.floor(Date.now() / 1000);
-    
-    // Check if token is expired (with 30 seconds buffer)
-    return decoded.exp <= now + 30;
-  },
-
-  // Decode the JWT token to get user ID and other claims
-  decodeToken: (token: string | null): DecodedToken | null => {
-    return decodeJWT(token);
-  },
-  
-  // Get the current user ID from the token
-  getUserIdFromToken: (): string | null => {
-    const token = localStorage.getItem('access_token');
-    const decoded = decodeJWT(token);
-    return decoded?.sub || null;
   }
 };
 

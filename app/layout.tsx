@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { AuthLayoutWrapper } from '@/components/layout/AuthLayoutWrapper';
 import { AlertProvider } from '@/contexts/AlertContext';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { SessionProvider } from 'next-auth/react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,13 +21,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
+        <SessionProvider>
           <AlertProvider>
             <AuthLayoutWrapper>
               {children}
             </AuthLayoutWrapper>
           </AlertProvider>
-        </AuthProvider>
+        </SessionProvider>
       </body>
     </html>
   );
