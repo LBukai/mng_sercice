@@ -69,12 +69,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async jwt({ token, account, user, trigger }) {
-      console.log("JWT callback - trigger:", trigger, "account exists:", !!account);
-      console.log("JWT callback - token before:", { 
-        hasCustomAccessToken: !!token.customAccessToken, 
-        hasAccessToken: !!token.accessToken 
-      });
-      
       // On initial sign-in, account will be present
       if (account) {
         const accountToken = account.access_token || account.id_token || account.customAccessToken;
@@ -84,23 +78,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.accessToken = accountToken;
         }
       }
-      // On subsequent requests, just return the existing token (preserve tokens)
-      
-      console.log("JWT callback - token after:", { 
-        hasCustomAccessToken: !!token.customAccessToken, 
-        hasAccessToken: !!token.accessToken 
-      });
       
       return token;
     },
     async session({ session, token }) {
       // Expose the token to the client session
-      console.log("Session callback - token:", !!token?.customAccessToken);
+
       if (token?.customAccessToken) {
         session.customAccessToken = token.customAccessToken;
         session.sessionToken = token.accessToken;
         session.user.id = "25";
-        console.log("Session callback - session tokens set successfully");
       }
 
       return session;

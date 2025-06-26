@@ -21,7 +21,7 @@ export const AddProjectUsersForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState<ProjectRole>('user');
+  const [selectedRole, setSelectedRole] = useState<ProjectRole>('User');
 
   // Fetch all users
   useEffect(() => {
@@ -98,10 +98,8 @@ export const AddProjectUsersForm = ({
             onChange={handleRoleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="project_lead">Project Lead</option>
-            <option value="admin">Admin</option>
-            <option value="user">User</option>
-            <option value="viewer">Viewer</option>
+            <option value="Project Lead">Project Lead</option>
+            <option value="User">User</option>
           </select>
         </div>
         

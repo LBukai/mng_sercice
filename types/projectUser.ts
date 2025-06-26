@@ -1,6 +1,6 @@
 import { User } from '@/types/user';
 
-export type ProjectRole = 'project_lead' | 'user' /*| 'admin' | 'viewer'*/;
+export type ProjectRole = 'Project Lead' | 'User' /*| 'admin' | 'viewer'*/;
 
 export interface ProjectRoleDefinition {
   role: ProjectRole;

@@ -20,7 +20,7 @@ export const ProjectUsersTable = ({
 }: ProjectUsersTableProps) => {
   const [userToEdit, setUserToEdit] = useState<ProjectUser | null>(null);
   const [userToRemove, setUserToRemove] = useState<ProjectUser | null>(null);
-  const [selectedRole, setSelectedRole] = useState<ProjectRole>('user');
+  const [selectedRole, setSelectedRole] = useState<ProjectRole>('User');
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedRole(e.target.value as ProjectRole);
@@ -42,14 +42,10 @@ export const ProjectUsersTable = ({
 
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
-      case 'project_lead':
+      case 'Project Lead':
         return 'bg-blue-100 text-blue-800';
-      case 'admin':
-        return 'bg-purple-100 text-purple-800';
       case 'user':
         return 'bg-green-100 text-green-800';
-      case 'viewer':
-        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -74,11 +70,7 @@ export const ProjectUsersTable = ({
           </thead>
           <tbody className="text-gray-600 text-sm">
             {isLoading ? (
-              <tr>
-
                   <SkeletonLoader type="table-row" count={3} />
-
-              </tr>
             ) : projectUsers.length > 0 ? (
               projectUsers.map((projectUser) => (
                 <tr key={projectUser.user.id} className="border-b border-gray-200 hover:bg-gray-50">

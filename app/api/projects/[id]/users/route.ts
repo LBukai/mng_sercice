@@ -17,11 +17,14 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const body = await req.json();
-    const newUsers = await addUsersToProject(params.id, body);
+    const { id } = context.params;
+    console.log("Hello routes", id, body);
+
+    const newUsers = await addUsersToProject(id, body);
     return NextResponse.json(newUsers, { status: 201 });
   } catch (err) {
     const errorMessage =
