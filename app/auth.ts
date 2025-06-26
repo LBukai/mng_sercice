@@ -58,39 +58,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return !!auth;
     },
     signIn: async ({ account, user, profile }) => {
-      console.log("SignIn callback - account:", account);
-      console.log("SignIn callback - user:", user);
-      console.log("SignIn callback - profile:", profile);
       
       // Check for access_token or id_token
       const token = account?.access_token || account?.id_token;
       
       if (token) {
-        console.log("SignIn callback - token found:", account?.access_token ? "access_token" : "id_token");
         account.customAccessToken = token;
-      } else {
-        console.log("SignIn callback - NO token found in account");
-        console.log("SignIn callback - available properties:", Object.keys(account || {}));
+        account.userId = "25";// TODO remove later and implement getUserId
       }
       return true;
     },
-    async jwt({ token, account, user }) {
-      console.log("JWT callback - account exists:", !!account);
+    async jwt({ token, account, user, trigger }) {
+      console.log("JWT callback - trigger:", trigger, "account exists:", !!account);
       console.log("JWT callback - token before:", { 
         hasCustomAccessToken: !!token.customAccessToken, 
         hasAccessToken: !!token.accessToken 
       });
       
-      // This is called after signIn and on every request
-      const accountToken = account?.access_token || account?.id_token || account?.customAccessToken;
-      
-      if (accountToken) {
-        console.log("JWT callback - token found, setting tokens");
-        token.customAccessToken = accountToken;
-        token.accessToken = accountToken;
-      } else {
-        console.log("JWT callback - no account tokens found");
+      // On initial sign-in, account will be present
+      if (account) {
+        const accountToken = account.access_token || account.id_token || account.customAccessToken;
+        
+        if (accountToken) {
+          token.customAccessToken = accountToken;
+          token.accessToken = accountToken;
+        }
       }
+      // On subsequent requests, just return the existing token (preserve tokens)
       
       console.log("JWT callback - token after:", { 
         hasCustomAccessToken: !!token.customAccessToken, 
@@ -105,6 +99,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token?.customAccessToken) {
         session.customAccessToken = token.customAccessToken;
         session.sessionToken = token.accessToken;
+        session.user.id = "25";
         console.log("Session callback - session tokens set successfully");
       }
 
