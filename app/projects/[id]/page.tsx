@@ -1,3 +1,4 @@
+// app/projects/[id]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,6 +7,8 @@ import { Project } from '@/types/project';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useProjects } from '@/hooks/useProjects';
 import { useProjectUsers } from '@/hooks/useProjectUsers';
+import { useProjectWorkspaces } from '@/hooks/useProjectWorkspaces';
+import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { 
   WorkspaceLimitBadge, 
@@ -13,7 +16,11 @@ import {
   CostCenterBadge, 
   ProjectNumberBadge 
 } from '@/components/projects/ProjectBadge';
-import { Button, LinkButton } from '@/components/common/Button';
+import { ProjectUsersTable } from '@/components/projects/ProjectUsersTable';
+import { ProjectWorkspacesTable } from '@/components/projects/ProjectWorkspacesTable';
+import { ProjectFilesTable } from '@/components/projects/ProjectFilesTable';
+import { Modal } from '@/components/common/Modal';
+import { AddProjectUsersForm } from '@/components/projects/AddProjectUsersForm';
 import Link from 'next/link';
 
 export default function ProjectDetailsPage() {
@@ -22,8 +29,35 @@ export default function ProjectDetailsPage() {
   const projectId = params.id as string;
   
   const [project, setProject] = useState<Project | null>(null);
+  const [showAddUsersModal, setShowAddUsersModal] = useState(false);
+  
+  // Hooks for data management
   const { isLoading: projectLoading, error: projectError, getProjectById, deleteProject } = useProjects();
-  const { projectUsers, isLoading: usersLoading, error: usersError, fetchProjectUsers } = useProjectUsers(projectId);
+  const { 
+    projectUsers, 
+    isLoading: usersLoading, 
+    error: usersError, 
+    fetchProjectUsers,
+    addUsersToProject,
+    updateUserRole,
+    removeUserFromProject
+  } = useProjectUsers(projectId);
+  
+  const {
+    projectWorkspaces,
+    isLoading: workspacesLoading,
+    error: workspacesError,
+    fetchProjectWorkspaces,
+    addWorkspacesToProject
+  } = useProjectWorkspaces(projectId);
+  
+  const {
+    projectFiles,
+    isLoading: filesLoading,
+    error: filesError,
+    fetchProjectFiles,
+    uploadFilesToProject
+  } = useProjectFiles(projectId);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,13 +67,17 @@ export default function ProjectDetailsPage() {
           setProject(projectData);
         }
         
-        // Also fetch project users
-        await fetchProjectUsers();
+        // Fetch all related data
+        await Promise.all([
+          fetchProjectUsers(),
+          fetchProjectWorkspaces(),
+          fetchProjectFiles()
+        ]);
       }
     };
 
     fetchData();
-  }, [projectId, getProjectById, fetchProjectUsers]);
+  }, [projectId, getProjectById, fetchProjectUsers, fetchProjectWorkspaces, fetchProjectFiles]);
 
   const handleDelete = async () => {
     if (!project?.id) return;
@@ -50,6 +88,11 @@ export default function ProjectDetailsPage() {
         router.push('/projects');
       }
     }
+  };
+
+  const handleAddWorkspace = () => {
+    // TODO: Implement add workspace modal
+    console.log('Add workspace clicked');
   };
 
   return (
@@ -76,6 +119,7 @@ export default function ProjectDetailsPage() {
         </div>
       ) : project ? (
         <>
+          {/* Project Information Section */}
           <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
             <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
               <div>
@@ -83,15 +127,6 @@ export default function ProjectDetailsPage() {
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">Details and configuration of the project.</p>
               </div>
               <div className="flex space-x-2">
-                <Link
-                  href={`/projects/${project.id}/users`}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <svg className="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  Manage Users
-                </Link>
                 <Link
                   href={`/projects/edit/${project.id}`}
                   className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -141,13 +176,6 @@ export default function ProjectDetailsPage() {
                   </dd>
                 </div>
                 <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Created At</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {/* This is a placeholder since the API doesn't provide this data */}
-                    {new Date().toLocaleDateString()}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Status</dt>
                   <dd className="mt-1 sm:mt-0 sm:col-span-2">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -159,76 +187,55 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
 
-          {/* Project Users Section */}
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Project Users</h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">Users with access to this project.</p>
-              </div>
-              <Link
-                href={`/projects/${project.id}/users`}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                View All & Manage
-              </Link>
-            </div>
-            <div className="border-t border-gray-200">
-              {usersLoading ? (
-                <div className="flex justify-center py-6">
-                  <LoadingSpinner size="md" />
-                </div>
-              ) : usersError ? (
-                <div className="p-4 text-sm text-red-600">
-                  Error loading project users.
-                </div>
-              ) : projectUsers != null ? (
-                <ul className="divide-y divide-gray-200">
-                  {projectUsers.slice(0, 5).map((projectUser) => (
-                    <li key={projectUser.user.id} className="px-4 py-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-xl font-medium text-gray-600">
-                              {projectUser.user.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{projectUser.user.name}</div>
-                            <div className="text-sm text-gray-500">{projectUser.user.email}</div>
-                          </div>
-                        </div>
-                        <div>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            projectUser.role.role === 'project_lead' ? 'bg-blue-100 text-blue-800' :
-                            //projectUser.role.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                            //projectUser.role.role === 'viewer' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {projectUser.role.role}
-                          </span>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-center py-6 text-gray-500">
-                  No users have been added to this project.
-                </div>
-              )}
-              {projectUsers != null && projectUsers.length > 5 && (
-                <div className="px-4 py-3 border-t border-gray-200 text-right">
-                  <Link
-                    href={`/projects/${project.id}/users`}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    View All {projectUsers.length} Users →
-                  </Link>
-                </div>
-              )}
-            </div>
+          {/* Project Users Table */}
+          <div className="mb-6">
+            <ProjectUsersTable
+              projectUsers={projectUsers}
+              isLoading={usersLoading}
+              error={usersError}
+              onUserRoleUpdate={updateUserRole}
+              onUserRemove={removeUserFromProject}
+              onAddUsers={() => setShowAddUsersModal(true)}
+            />
           </div>
+
+          {/* Project Workspaces Table */}
+          <div className="mb-6">
+            <ProjectWorkspacesTable
+              projectWorkspaces={projectWorkspaces}
+              isLoading={workspacesLoading}
+              error={workspacesError}
+              onAddWorkspace={handleAddWorkspace}
+            />
+          </div>
+
+          {/* Project Files Table */}
+          <div className="mb-6">
+            <ProjectFilesTable
+              projectFiles={projectFiles}
+              isLoading={filesLoading}
+              error={filesError}
+              onUploadFiles={uploadFilesToProject}
+            />
+          </div>
+
+          {/* Add Users Modal */}
+          <Modal 
+            isOpen={showAddUsersModal} 
+            onClose={() => setShowAddUsersModal(false)}
+            title="Add Users to Project"
+            size="md"
+          >
+            <AddProjectUsersForm 
+                  onSubmit={async (usersData) => {
+                    const success = await addUsersToProject(usersData);
+                    if (success) {
+                      setShowAddUsersModal(false);
+                    }
+                    return success;
+                  } }
+                  onCancel={() => setShowAddUsersModal(false)} projectId={''} existingUsers={[]}            />
+          </Modal>
         </>
       ) : (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative">
