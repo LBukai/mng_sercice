@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { User } from '@/types/user';
-import { getUserById, updateUser } from '@/services/userApi';
+import { apiService } from '@/services/api';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useAlert } from '@/contexts/AlertContext';
 import Link from 'next/link';
@@ -36,7 +36,7 @@ export default function EditUserPage() {
     const fetchUser = async () => {
       try {
         setIsLoading(true);
-        const data = await getUserById(userId);
+        const data = await apiService.getUserById(userId);
         setUser(data);
         setFormData(data);
         setError(null);
@@ -111,7 +111,7 @@ export default function EditUserPage() {
     
     try {
       setIsSaving(true);
-      await updateUser(userId, formData);
+      await apiService.updateUser(userId, formData);
       showAlert('success', 'User updated successfully');
       router.push(`/users/${userId}`);
     } catch (err) {

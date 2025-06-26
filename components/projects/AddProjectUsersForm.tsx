@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@/types/user';
 import { UserAndRole, ProjectRole } from '@/types/projectUser';
-import { getUsers } from '@/services/userApi';
+import { apiService } from '@/services/api';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 interface AddProjectUsersFormProps {
@@ -29,7 +29,7 @@ export const AddProjectUsersForm = ({
       try {
         setIsLoading(true);
         setError(null);
-        const users = await getUsers();
+        const users = await apiService.getUsers();
         
         // Filter out users that are already in the project
         const availableUsers = users.filter(user => !existingUsers.includes(user.id as string));
