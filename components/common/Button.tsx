@@ -13,8 +13,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-interface LinkButtonProps extends Omit<ButtonProps, 'type'> {
+interface LinkButtonProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  fullWidth?: boolean;
 }
 
 export const Button = ({ 

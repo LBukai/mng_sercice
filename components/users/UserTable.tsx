@@ -6,7 +6,6 @@ import { Modal } from '@/components/common/Modal';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { useUsers } from '@/hooks/useUsers';
 import { UserBadge } from './UserBadge';
-import Link from 'next/link';
 
 interface UserTableProps {
   users: User[];
@@ -245,7 +244,7 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
       >
         <div>
           <p className="text-sm text-gray-500 mb-4">
-            Are you sure you want to delete the user "{userToDelete?.name}"? This action cannot be undone.
+            Are you sure you want to delete the user? This action cannot be undone.
           </p>
           <div className="flex justify-end space-x-3">
             <button

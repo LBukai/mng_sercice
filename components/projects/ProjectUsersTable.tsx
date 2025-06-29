@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { ProjectUser, ProjectRole } from '@/types/projectUser';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
-import { Modal } from '@/components/common/Modal';
-import { AddProjectUsersForm } from './AddProjectUsersForm';
 
 interface ProjectUsersTableProps {
   projectUsers: ProjectUser[];
@@ -35,7 +33,7 @@ export const ProjectUsersTable = ({
     }
   };
 
-  const getRoleColor = (role: string) => {
+  /*const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
       case 'Project Lead':
         return 'bg-purple-100 text-purple-800';
@@ -44,7 +42,7 @@ export const ProjectUsersTable = ({
       default:
         return 'bg-gray-100 text-gray-800';
     }
-  };
+  };*/
 
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">

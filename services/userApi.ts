@@ -30,6 +30,7 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function createUser(userData: Omit<User, "id">): Promise<User> {
+  console.log(JSON.stringify(userData));
   const response = await fetch(`${API_BASE_URL}/users`, {
     method: "POST",
     headers: await getAuthHeaders(),

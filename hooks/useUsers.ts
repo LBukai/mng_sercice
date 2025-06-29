@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { User } from '@/types/user';
+import { getUsers, createUser as createUserApi, updateUser as updateUserApi, deleteUser as deleteUserApi, getUserById as getUserByIdApi } from '@/services/userApi';
 import { useAlert } from '@/contexts/AlertContext';
 
 export const useUsers = () => {
@@ -12,9 +13,7 @@ export const useUsers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch('/api/users')
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load users');
+      const data = await getUsers();
       setUsers(data);
       return data;
     } catch (err) {
@@ -31,9 +30,7 @@ export const useUsers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/users/${id}`)
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load user');
+      const data = await getUserByIdApi(id);
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -49,17 +46,64 @@ export const useUsers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/users`, { method: 'POST', body: JSON.stringify(userData) })
-      const newUser = await res.json();
-      if (!res.ok) throw new Error(newUser.error || 'Failed to create project');
+      
+      // Log the data being sent for debugging
+      console.log('Creating user with data:', userData);
+      
+      const newUser = await createUserApi(userData);
       setUsers(prev => [...prev, newUser]);
       showAlert('success', 'User created successfully');
       return newUser;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error('Error creating user:', err, 'User data:', userData);
       setError(errorMessage);
       showAlert('error', `Failed to create user: ${errorMessage}`);
       return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showAlert]);
+
+  const createUsers = useCallback(async (usersData: Omit<User, 'id'>[]): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const createdUsers: User[] = [];
+      let successCount = 0;
+      
+      // Create users one by one (you can optimize this with a bulk API endpoint if available)
+      for (const userData of usersData) {
+        try {
+          const newUser = await createUserApi(userData);
+          createdUsers.push(newUser);
+          successCount++;
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          showAlert('error', `Failed to create user ${userData.name}: ${errorMessage}`);
+        }
+      }
+      
+      if (createdUsers.length > 0) {
+        setUsers(prev => [...prev, ...createdUsers]);
+      }
+      
+      if (successCount === usersData.length) {
+        showAlert('success', `All ${successCount} users created successfully`);
+        return true;
+      } else if (successCount > 0) {
+        showAlert('warning', `${successCount} of ${usersData.length} users created successfully`);
+        return false;
+      } else {
+        showAlert('error', 'Failed to create any users');
+        return false;
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+      showAlert('error', `Failed to create users: ${errorMessage}`);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -69,9 +113,7 @@ export const useUsers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(userData) })
-      const updatedUser = await res.json();
-      if (!res.ok) throw new Error(updatedUser.error || 'Failed to update project');
+      const updatedUser = await updateUserApi(id, userData);
       setUsers(prev => 
         prev.map(user => user.id === id ? { ...user, ...updatedUser } : user)
       );
@@ -91,8 +133,7 @@ export const useUsers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/users/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete user');
+      await deleteUserApi(id);
       setUsers(prev => prev.filter(user => user.id !== id));
       showAlert('success', 'User deleted successfully');
       return true;
@@ -113,6 +154,7 @@ export const useUsers = () => {
     fetchUsers,
     getUserById,
     createUser,
+    createUsers,
     updateUser,
     deleteUser,
   };

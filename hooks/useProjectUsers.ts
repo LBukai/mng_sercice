@@ -57,6 +57,7 @@ export const useProjectUsers = (projectId: string) => {
   }, [projectId, fetchProjectUsers, showAlert]);
 
   const updateUserRole = useCallback(async (userId: string, role: ProjectRole) => {
+    console.log("Hello role at hook",userId,role)
     if (!projectId || !userId) return false;
     
     try {

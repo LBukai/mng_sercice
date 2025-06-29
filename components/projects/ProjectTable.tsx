@@ -239,7 +239,7 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
       >
         <div>
           <p className="text-sm text-gray-500 mb-4">
-            Are you sure you want to delete the project "{projectToDelete?.name}"? This action cannot be undone.
+            Are you sure you want to delete the project? This action cannot be undone.
           </p>
           <div className="flex justify-end space-x-3">
             <button

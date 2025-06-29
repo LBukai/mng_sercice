@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const projectUsers = await getProjectUsers(params.id);
+    const { id } = await params;
+    const projectUsers = await getProjectUsers(id);
     return NextResponse.json(projectUsers);
   } catch (err) {
     const errorMessage =
@@ -17,13 +18,11 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
-    const { id } = context.params;
-    console.log("Hello routes", id, body);
-
     const newUsers = await addUsersToProject(id, body);
     return NextResponse.json(newUsers, { status: 201 });
   } catch (err) {

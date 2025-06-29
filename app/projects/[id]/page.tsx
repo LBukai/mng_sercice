@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Project } from '@/types/project';
+import { Workspace } from '@/types/workspace';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useProjects } from '@/hooks/useProjects';
 import { useProjectUsers } from '@/hooks/useProjectUsers';
@@ -90,9 +91,8 @@ export default function ProjectDetailsPage() {
     }
   };
 
-  const handleAddWorkspace = () => {
-    // TODO: Implement add workspace modal
-    console.log('Add workspace clicked');
+  const handleAddWorkspace = async (workspaceData: Omit<Workspace, 'id'>) => {
+    return await addWorkspacesToProject([workspaceData]);
   };
 
   return (

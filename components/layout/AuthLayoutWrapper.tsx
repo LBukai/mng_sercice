@@ -1,10 +1,11 @@
 // components/layout/AuthLayoutWrapper.tsx
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { useSession } from 'next-auth/react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface AuthLayoutWrapperProps {
@@ -12,13 +13,62 @@ interface AuthLayoutWrapperProps {
 }
 
 export const AuthLayoutWrapper = ({ children }: AuthLayoutWrapperProps) => {
+  const { data: session, status } = useSession();
   const pathname = usePathname();
-  const session = useSession()
+  const router = useRouter();
+  
+  const isAuthenticated = status === 'authenticated';
+  const isLoading = status === 'loading';
+  const isAdmin = session?.user?.isAdmin || false;
   
   // Don't show the authenticated layout on the login page
   const isLoginPage = pathname === '/login';
-
-    if (session.status === 'loading') {
+  
+  // Define admin-only routes
+  const adminOnlyRoutes = [
+    '/', // Dashboard
+    '/users', // User management
+    '/projects', // Project listing (not individual project pages)
+  ];
+  
+  // Check if current path is an admin-only route
+  const isAdminRoute = adminOnlyRoutes.some(route => {
+    if (route === '/') {
+      return pathname === '/';
+    }
+    if (route === '/projects') {
+      return pathname === '/projects'; // Exact match for projects listing
+    }
+    return pathname.startsWith(route);
+  });
+  
+  // Handle admin access control
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      // If trying to access admin route but not admin, redirect to my-projects
+      if (isAdminRoute && !isAdmin) {
+        router.push('/my-projects');
+        return;
+      }
+      
+      // If non-admin user is on root path, redirect to my-projects
+      if (pathname === '/' && !isAdmin) {
+        router.push('/my-projects');
+        return;
+      }
+      
+      // If admin user accesses my-projects, optionally redirect to dashboard
+      // (Remove this if you want admins to also access my-projects)
+      if (pathname === '/my-projects' && isAdmin) {
+        // Optionally redirect admins to dashboard, or let them access my-projects
+        // Uncomment the line below if you want to redirect admins away from my-projects
+        // router.push('/');
+      }
+    }
+  }, [isLoading, isAuthenticated, isAdmin, isAdminRoute, pathname, router]);
+  
+  // Show loading while session is loading
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -26,8 +76,8 @@ export const AuthLayoutWrapper = ({ children }: AuthLayoutWrapperProps) => {
     );
   }
   
-  // For login page or when not authenticated, show simple layout
-  if (isLoginPage || session.status !== 'authenticated') {
+  // For login page or unauthenticated users, show simple layout without sidebar
+  if (isLoginPage || !isAuthenticated) {
     return <>{children}</>;
   }
   

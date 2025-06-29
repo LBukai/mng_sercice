@@ -12,7 +12,6 @@ interface AddProjectUsersFormProps {
 }
 
 export const AddProjectUsersForm = ({ 
-  projectId, 
   existingUsers, 
   onSubmit, 
   onCancel 

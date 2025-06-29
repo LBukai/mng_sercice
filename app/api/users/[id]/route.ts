@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const project = await getUserById(params.id);
+    const { id } = await params;
+    const project = await getUserById(id);
     return NextResponse.json(project);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -16,12 +17,13 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const updatedUser = await updateUser(
-      params.id,
+      id,
       body
     );
     return NextResponse.json(updatedUser);
@@ -33,10 +35,11 @@ export async function PUT(
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await deleteUser(params.id);
+    const { id } = await params;
+    await deleteUser(id);
     return NextResponse.json({ success: true });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

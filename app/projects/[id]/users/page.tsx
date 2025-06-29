@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ProjectUsersTable } from '@/components/projects/ProjectUsersTable';
 import { AddProjectUsersForm } from '@/components/projects/AddProjectUsersForm';
@@ -9,12 +9,11 @@ import { useProjectUsers } from '@/hooks/useProjectUsers';
 import { useProjects } from '@/hooks/useProjects';
 import { Modal } from '@/components/common/Modal';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { ProjectRole } from '@/types/projectUser';
+import { ProjectRole, UserAndRole } from '@/types/projectUser'; // Add UserAndRole import
 import Link from 'next/link';
 
 export default function ProjectUsersPage() {
   const params = useParams();
-  const router = useRouter();
   const projectId = params.id as string;
   
   const [showAddUsersModal, setShowAddUsersModal] = useState(false);
@@ -53,20 +52,23 @@ export default function ProjectUsersPage() {
     }
   }, [projectId, fetchProjectUsers, getProjectById]);
 
-  const handleAddUsers = async (usersData) => {
+  const handleAddUsers = async (usersData: UserAndRole[]) => {
     const success = await addUsersToProject(usersData);
     if (success) {
       setShowAddUsersModal(false);
     }
   };
 
-  const handleUpdateRole = async (userId: string, role: ProjectRole) => {
-    await updateUserRole(userId, role);
+  const handleUpdateRole = async (userId: string, role: ProjectRole): Promise<boolean> => {
+    const success = await updateUserRole(userId, role);
+    return success;
   };
 
-  const handleRemoveUser = async (userId: string) => {
-    await removeUserFromProject(userId);
+  const handleRemoveUser = async (userId: string): Promise<boolean> => {
+    const success = await removeUserFromProject(userId);
+    return success;
   };
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -105,8 +107,10 @@ export default function ProjectUsersPage() {
           <ProjectUsersTable 
             projectUsers={projectUsers} 
             isLoading={isLoading}
-            onUpdateRole={handleUpdateRole}
-            onRemoveUser={handleRemoveUser}
+            error={error}
+            onUserRoleUpdate={handleUpdateRole}
+            onUserRemove={handleRemoveUser}
+            onAddUsers={() => setShowAddUsersModal(true)}
           />
         )}
       </div>

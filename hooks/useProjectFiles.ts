@@ -3,6 +3,11 @@ import { File } from '@/types/file';
 import { fileApiService } from '@/services/fileApi';
 import { useAlert } from '@/contexts/AlertContext';
 
+interface FileUploadData {
+  files: FileList;
+  ttl: string;
+}
+
 export const useProjectFiles = (projectId: string) => {
   const [projectFiles, setProjectFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,20 +37,15 @@ export const useProjectFiles = (projectId: string) => {
     }
   }, [projectId, showAlert]);
 
-  const uploadFilesToProject = useCallback(async (files: FileList) => {
-    if (!projectId || !files.length) return false;
+  const uploadFilesToProject = useCallback(async (data: FileUploadData) => {
+    if (!projectId || !data.files.length) return false;
     
     try {
       setIsLoading(true);
       setError(null);
       
-      const formData = new FormData();
-      Array.from(files).forEach((file) => {
-        formData.append('files', file);
-      });
-      
-      const uploadedFiles = await fileApiService.uploadFilesToProject(projectId, formData);
-      showAlert('success', 'Files uploaded successfully');
+      const uploadedFiles = await fileApiService.uploadFilesToProject(projectId, data);
+      showAlert('success', `${data.files.length} file(s) uploaded successfully`);
       // Refresh the project files list
       await fetchProjectFiles();
       return uploadedFiles;

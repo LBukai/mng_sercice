@@ -1,23 +1,19 @@
 // services/fileApi.ts
 import { File } from '@/types/file';
-import authApiService from './authApi';
 
-const API_BASE_URL = 'http://localhost:8080';
-
-const getAuthHeaders = () => {
-  const token = authApiService.getAccessToken();
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
-};
+interface FileUploadData {
+  files: FileList;
+  ttl: string;
+}
 
 export const fileApiService = {
   // Get files for a project
   getProjectFiles: async (projectId: string): Promise<File[]> => {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/files`, {
+    const response = await fetch(`/api/projects/${projectId}/files`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
@@ -27,14 +23,25 @@ export const fileApiService = {
     return response.json();
   },
 
-  // Upload files to a project
-  uploadFilesToProject: async (projectId: string, formData: FormData): Promise<File[]> => {
-    const token = authApiService.getAccessToken();
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/files`, {
+  // Upload files to a project with TTL
+  uploadFilesToProject: async (projectId: string, data: FileUploadData): Promise<File[]> => {
+    const formData = new FormData();
+    
+    // Add files to FormData
+    Array.from(data.files).forEach((file) => {
+      formData.append('files', file);
+    });
+    
+    // Add metadata with TTL for each file
+    const metadata = Array.from(data.files).map((file) => ({
+      name: file.name,
+      ttl: data.ttl,
+    }));
+    
+    formData.append('metadata', JSON.stringify(metadata));
+
+    const response = await fetch(`/api/projects/${projectId}/files`, {
       method: 'POST',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-      },
       body: formData,
     });
 

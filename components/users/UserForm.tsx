@@ -82,7 +82,7 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
     if (validateForm()) {
       // For editing, remove password if it's empty
       if (isEditMode && !formData.password) {
-        const { password, ...userDataWithoutPassword } = formData;
+        const { ...userDataWithoutPassword } = formData;
         onSubmit(userDataWithoutPassword);
       } else {
         onSubmit(formData);
