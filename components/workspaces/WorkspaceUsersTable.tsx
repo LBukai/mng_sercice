@@ -24,6 +24,17 @@ export const WorkspaceUsersTable = ({
 }: WorkspaceUsersTableProps) => {
   const [showAddUsersModal, setShowAddUsersModal] = useState(false);
 
+  // Helper function to extract user from both formats
+  const extractUser = (userData: User | { user: User }): User => {
+    return 'user' in userData ? userData.user : userData;
+  };
+
+  // Helper function to get user ID from both formats
+  const getUserId = (userData: User | { user: User }): string => {
+    const user = extractUser(userData);
+    return user.id || '';
+  };
+
   const handleRemoveUser = async (userId: string, userName: string) => {
     if (window.confirm(`Are you sure you want to remove ${userName} from this workspace?`)) {
       await onUserRemove(userId);
@@ -85,11 +96,12 @@ export const WorkspaceUsersTable = ({
                 </>
               ) : workspaceUsers.length > 0 ? (
                 workspaceUsers.map((userData, index) => {
-                  // Handle both formats: direct User object or {user: User} object
-                  const user = 'user' in userData ? userData.user : userData;
+                  // Extract user from both formats
+                  const user = extractUser(userData);
+                  const userId = getUserId(userData);
                   
                   return (
-                    <tr key={user.id || `user-${index}`} className="hover:bg-gray-50">
+                    <tr key={userId || `user-${index}`} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
@@ -114,7 +126,7 @@ export const WorkspaceUsersTable = ({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          onClick={() => handleRemoveUser(user.id!, user.name)}
+                          onClick={() => handleRemoveUser(userId, user.name)}
                           className="text-red-600 hover:text-red-900"
                         >
                           Remove
@@ -144,7 +156,7 @@ export const WorkspaceUsersTable = ({
       >
         <AddWorkspaceUsersForm 
           workspace={workspace}
-          existingUsers={workspaceUsers.map(u => u.id as string)}
+          existingUsers={workspaceUsers.map(userData => getUserId(userData))}
           onSubmit={handleAddUsers}
           onCancel={() => setShowAddUsersModal(false)}
         />

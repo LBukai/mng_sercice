@@ -3,7 +3,7 @@ import { User } from '@/types/user';
 
 interface UserFormProps {
   user?: User;
-  onSubmit: (userData: Omit<User, 'id'> | User) => void;
+  onSubmit: (userData: User) => Promise<void> | void;
   onCancel: () => void;
 }
 
@@ -11,6 +11,7 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
   const isEditMode = !!user?.id;
   
   const [formData, setFormData] = useState<User>({
+    id: '',
     name: '',
     email: '',
     username: '',
@@ -80,12 +81,19 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
     e.preventDefault();
     
     if (validateForm()) {
+      // Always pass a User object with id (either existing or empty string for new users)
+      const submitData: User = {
+        ...formData,
+        id: formData.id || '', // Ensure id is always present
+      };
+      
       // For editing, remove password if it's empty
       if (isEditMode && !formData.password) {
-        const { ...userDataWithoutPassword } = formData;
-        onSubmit(userDataWithoutPassword);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password, ...userDataWithoutPassword } = submitData;
+        onSubmit({ ...userDataWithoutPassword, id: submitData.id });
       } else {
-        onSubmit(formData);
+        onSubmit(submitData);
       }
     }
   };

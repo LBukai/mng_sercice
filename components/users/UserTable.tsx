@@ -45,8 +45,11 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
     return 0;
   });
 
-  const handleAddUser = async (userData: Omit<User, 'id'>) => {
-    const result = await createUser(userData);
+  const handleAddUser = async (userData: User) => {
+    // For new users, we need to convert to Omit<User, 'id'>
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...userDataWithoutId } = userData;
+    const result = await createUser(userDataWithoutId);
     if (result) {
       setShowAddModal(false);
       onUserChange(); // Refresh the user list

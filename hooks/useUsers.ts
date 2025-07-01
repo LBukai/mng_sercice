@@ -115,9 +115,8 @@ export const useUsers = () => {
       setError(null);
       
       console.log('Updating user:', { id, userData });
-      console.log('Making PUT request to:', `/api/users/${id}`);
       
-      // Make the API call directly here instead of using the service
+      // Use direct API call instead of server action for client components
       const response = await fetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: {
@@ -125,19 +124,19 @@ export const useUsers = () => {
         },
         body: JSON.stringify(userData),
       });
-      
+
       console.log('Update response:', {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Update failed:', errorData);
         throw new Error(errorData.error || `Failed to update user: ${response.status} ${response.statusText}`);
       }
-      
+
       const updatedUser = await response.json();
       console.log('Updated user:', updatedUser);
       

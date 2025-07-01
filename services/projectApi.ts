@@ -106,7 +106,7 @@ export async function getProjectUsers(projectId: string): Promise<ProjectUser[]>
 export async function addUsersToProject(
     projectId: string,
     usersData: UserAndRole[]
-  ): Promise<void> {
+  ): Promise<string> {
     const response = await fetch(
       `${API_BASE_URL}/projects/${projectId}/users`,
       {
@@ -115,17 +115,35 @@ export async function addUsersToProject(
         body: JSON.stringify(usersData),
       }
     );
-
+    
     if (!response.ok) {
-      throw new Error(`Failed to add users to project: ${response.statusText}`);
+      const errorText = await response.text();
+      let errorMessage;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.message || errorJson.error || errorText;
+      } catch {
+        errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(`${errorMessage}`);
     }
+    
+    // Handle both JSON and text responses
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch {
+      responseData = await response.text();
+    }
+    
+    return responseData;
 }
 
 export async function updateUserRole(
     projectId: string,
     userId: string,
     role: ProjectRole
-  ): Promise<void> {
+  ): Promise<string> {
     const response = await fetch(
       `${API_BASE_URL}/projects/${projectId}/users/${userId}`,
       {
@@ -134,10 +152,28 @@ export async function updateUserRole(
         body: JSON.stringify({ role }),
       }
     );
-
+    
     if (!response.ok) {
-      throw new Error(`Failed to update user role: ${response.statusText}`);
+      const errorText = await response.text();
+      let errorMessage;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.message || errorJson.error || errorText;
+      } catch {
+        errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(`${errorMessage}`);
     }
+    
+    // Handle both JSON and text responses
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch {
+      responseData = await response.text();
+    }
+    
+    return responseData;
 }
 
 export async function removeUserFromProject(
@@ -153,6 +189,8 @@ export async function removeUserFromProject(
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Backend error response:', errorText);
       throw new Error(
         `Failed to remove user from project: ${response.statusText}`
       );

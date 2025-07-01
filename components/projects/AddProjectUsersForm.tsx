@@ -7,7 +7,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 interface AddProjectUsersFormProps {
   projectId: string;
   existingUsers: string[]; // IDs of users already in the project
-  onSubmit: (usersData: UserAndRole[]) => void;
+  onSubmit: (usersData: UserAndRole[]) => Promise<boolean>;
   onCancel: () => void;
 }
 
@@ -58,7 +58,7 @@ export const AddProjectUsersForm = ({
     setSelectedRole(e.target.value as ProjectRole);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (selectedUsers.length === 0) {
@@ -66,13 +66,23 @@ export const AddProjectUsersForm = ({
       return;
     }
     
-    // Create the user and role data
+    // Create the user and role data with proper serializable structure
     const usersData: UserAndRole[] = selectedUsers.map(userId => ({
       user_id: userId,
-      role: selectedRole,
+      role: selectedRole, // Pass the role as a simple string, not an object
     }));
     
-    onSubmit(usersData);
+    try {
+      const success = await onSubmit(usersData);
+      if (success) {
+        // Reset form on success
+        setSelectedUsers([]);
+        setError(null);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(`Failed to add users: ${errorMessage}`);
+    }
   };
 
   return (

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { User } from '@/types/user';
-import { updateUser, getUserById } from '@/services/userApi';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useAlert } from '@/contexts/AlertContext';
 import Link from 'next/link';
@@ -14,7 +13,6 @@ export default function EditUserPage() {
   const { showAlert } = useAlert();
   const userId = params.id as string;
   
-  //const [setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<User>({
     id: '',
     name: '',
@@ -36,8 +34,11 @@ export default function EditUserPage() {
     const fetchUser = async () => {
       try {
         setIsLoading(true);
-        const data = await getUserById(userId);
-        //setUser(data);
+        const response = await fetch(`/api/users/${userId}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user: ${response.statusText}`);
+        }
+        const data = await response.json();
         setFormData(data);
         setError(null);
       } catch (err) {
@@ -111,7 +112,32 @@ export default function EditUserPage() {
     
     try {
       setIsSaving(true);
-      await updateUser(userId, formData);
+      
+      console.log('Submitting user update:', { userId, formData });
+      
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log('Update response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Update failed:', errorData);
+        throw new Error(errorData.error || `Failed to update user: ${response.status} ${response.statusText}`);
+      }
+
+      const updatedUser = await response.json();
+      console.log('User updated successfully:', updatedUser);
+      
       showAlert('success', 'User updated successfully');
       router.push(`/users/${userId}`);
     } catch (err) {

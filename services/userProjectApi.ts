@@ -15,6 +15,9 @@ export const userProjectApiService = {
       throw new Error(`Failed to fetch user projects: ${response.statusText}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    
+    // Ensure we always return an array, never null or undefined
+    return Array.isArray(data) ? data : [];
   },
 };

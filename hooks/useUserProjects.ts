@@ -14,12 +14,15 @@ export const useUserProjects = () => {
       setIsLoading(true);
       setError(null);
       const data = await userProjectApiService.getUserProjects(userId);
-      setUserProjects(data);
-      return data;
+      // Ensure we always set an array, never null
+      setUserProjects(Array.isArray(data) ? data : []);
+      return Array.isArray(data) ? data : [];
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       showAlert('error', `Failed to fetch user projects: ${errorMessage}`);
+      // Set empty array on error to prevent null reference errors
+      setUserProjects([]);
       return [];
     } finally {
       setIsLoading(false);
