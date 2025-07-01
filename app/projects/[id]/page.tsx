@@ -58,7 +58,8 @@ export default function ProjectDetailsPage() {
     isLoading: filesLoading,
     error: filesError,
     fetchProjectFiles,
-    uploadFilesToProject
+    uploadFilesToProject,
+    removeFileFromProject
   } = useProjectFiles(projectId);
 
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function ProjectDetailsPage() {
         title="Project Details" 
         action={
           <Link
-            href="/projects"
+            href="/my-projects"
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
           >
             Back to Projects
@@ -218,6 +219,7 @@ export default function ProjectDetailsPage() {
               isLoading={filesLoading}
               error={filesError}
               onUploadFiles={uploadFilesToProject}
+              onRemoveFile={removeFileFromProject}
             />
           </div>
 

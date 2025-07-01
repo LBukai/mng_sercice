@@ -59,11 +59,46 @@ export const useProjectFiles = (projectId: string) => {
     }
   }, [projectId, fetchProjectFiles, showAlert]);
 
+  const removeFileFromProject = useCallback(async (fileId: string) => {
+    if (!projectId || !fileId) return false;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to remove file from project: ${response.statusText}`);
+      }
+
+      showAlert('success', 'File removed from project successfully');
+      
+      // Update the local state to remove the file
+      setProjectFiles(prev => prev.filter(file => file.id !== fileId));
+      
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+      showAlert('error', `Failed to remove file from project: ${errorMessage}`);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, showAlert]);
+
   return {
     projectFiles,
     isLoading,
     error,
     fetchProjectFiles,
     uploadFilesToProject,
+    removeFileFromProject,
   };
 };

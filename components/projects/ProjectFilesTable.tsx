@@ -14,13 +14,15 @@ interface ProjectFilesTableProps {
   isLoading: boolean;
   error: string | null;
   onUploadFiles: (data: FileUploadData) => Promise<File[] | false>;
+  onRemoveFile: (fileId: string) => Promise<boolean>;
 }
 
 export const ProjectFilesTable = ({
   projectFiles,
   isLoading,
   error,
-  onUploadFiles
+  onUploadFiles,
+  onRemoveFile
 }: ProjectFilesTableProps) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -39,6 +41,12 @@ export const ProjectFilesTable = ({
       return !!success;
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleRemoveFile = async (fileId: string, fileName: string) => {
+    if (window.confirm(`Are you sure you want to remove "${fileName}" from this project? This action cannot be undone.`)) {
+      await onRemoveFile(fileId);
     }
   };
 
@@ -125,7 +133,10 @@ export const ProjectFilesTable = ({
                       <button className="text-blue-600 hover:text-blue-900 mr-4">
                         Download
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
+                      <button 
+                        onClick={() => handleRemoveFile(file.id!, file.name)}
+                        className="text-red-600 hover:text-red-900"
+                      >
                         Delete
                       </button>
                     </td>

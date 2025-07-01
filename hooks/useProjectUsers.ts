@@ -39,7 +39,13 @@ export const useProjectUsers = (projectId: string) => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/projects/${projectId}/users`, { method: 'POST', body: JSON.stringify(usersData) })
+      const res = await fetch(`/api/projects/${projectId}/users`, { 
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(usersData) 
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to add users');
       showAlert('success', 'Users added to project successfully');
@@ -57,14 +63,30 @@ export const useProjectUsers = (projectId: string) => {
   }, [projectId, fetchProjectUsers, showAlert]);
 
   const updateUserRole = useCallback(async (userId: string, role: ProjectRole) => {
-    console.log("Hello role at hook",userId,role)
+    console.log("Updating user role:", userId, role);
     if (!projectId || !userId) return false;
     
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { method: 'PATCH', body: JSON.stringify(role) })
-      if (!res.ok) throw new Error('Failed to update user role');
+      
+      // Wrap the role in an object as expected by the API
+      const payload = { role: role };
+      console.log("Sending payload:", payload);
+      
+      const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { 
+        method: 'PATCH', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update user role');
+      }
+      
       showAlert('success', 'User role updated successfully');
       
       // Update the local state
@@ -93,7 +115,7 @@ export const useProjectUsers = (projectId: string) => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { method: 'DELETE' })
+      const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to remove user from project');
       showAlert('success', 'User removed from project successfully');
       
