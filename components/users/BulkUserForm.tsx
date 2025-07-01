@@ -60,11 +60,11 @@ export const BulkUserForm = ({ onSubmit, onCancel, isLoading = false }: BulkUser
         const jsonData = JSON.parse(event.target?.result as string);
         
         if (Array.isArray(jsonData)) {
-          const validUsers = jsonData.map((user: any) => ({
-            fullName: user.fullName || user.name || '',
+          const validUsers = jsonData.map((user: User) => ({
+            fullName:  user.name || '',
             email: user.email || '',
             username: user.username || '',
-            isAdmin: Boolean(user.isAdmin || user.admin || false)
+            isAdmin: Boolean(user.isAdmin || false)
           }));
           
           setUsers(validUsers.length > 0 ? validUsers : [{ fullName: '', email: '', username: '', isAdmin: false }]);
@@ -73,7 +73,7 @@ export const BulkUserForm = ({ onSubmit, onCancel, isLoading = false }: BulkUser
           alert('Invalid JSON format. Please upload an array of user objects.');
         }
       } catch (error) {
-        alert('Invalid JSON file. Please check the format and try again.');
+        console.error('Invalid JSON file. Please check the format and try again.', error);
       }
     };
     

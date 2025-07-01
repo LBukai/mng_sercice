@@ -22,7 +22,13 @@ declare module "next-auth" {
 
   interface Account {
     customAccessToken: string;
-    userData?: any;
+    userData?: {
+      id: string;
+      name: string;
+      email: string;
+      username?: string;
+      isAdmin?: boolean;
+    };
   }
 }
 

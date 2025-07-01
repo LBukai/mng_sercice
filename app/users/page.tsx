@@ -10,7 +10,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { User } from '@/types/user';
 
 export default function UsersPage() {
-  const { users, isLoading, error, fetchUsers, createUsers } = useUsers();
+  const { users, isLoading, error, fetchUsers } = useUsers();
   const [showBulkAddModal, setShowBulkAddModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
