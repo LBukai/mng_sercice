@@ -9,13 +9,15 @@ interface ProjectWorkspacesTableProps {
   isLoading: boolean;
   error: string | null;
   onAddWorkspace: (workspaceData: Omit<Workspace, 'id'>) => Promise<boolean>;
+  onRemoveWorkspace?: (workspaceId: string) => Promise<boolean>; // Make it optional for backward compatibility
 }
 
 export const ProjectWorkspacesTable = ({
   projectWorkspaces,
   isLoading,
   error,
-  onAddWorkspace
+  onAddWorkspace,
+  onRemoveWorkspace
 }: ProjectWorkspacesTableProps) => {
   const [showAddWorkspaceModal, setShowAddWorkspaceModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -34,6 +36,17 @@ export const ProjectWorkspacesTable = ({
       return success;
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleRemoveWorkspace = async (workspaceId: string, workspaceName: string) => {
+    if (!onRemoveWorkspace) {
+      console.error('onRemoveWorkspace function not provided');
+      return;
+    }
+    
+    if (window.confirm(`Are you sure you want to delete the workspace "${workspaceName}"? This action cannot be undone.`)) {
+      await onRemoveWorkspace(workspaceId);
     }
   };
 
@@ -107,9 +120,14 @@ export const ProjectWorkspacesTable = ({
                       >
                         View
                       </a>
-                      <button className="text-red-600 hover:text-red-900">
-                        Delete
-                      </button>
+                      {onRemoveWorkspace && (
+                        <button 
+                          onClick={() => handleRemoveWorkspace(workspace.id!, workspace.name)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

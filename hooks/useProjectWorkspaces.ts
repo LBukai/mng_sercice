@@ -53,11 +53,38 @@ export const useProjectWorkspaces = (projectId: string) => {
     }
   }, [projectId, fetchProjectWorkspaces, showAlert]);
 
+  const removeWorkspaceFromProject = useCallback(async (workspaceId: string) => {
+    if (!projectId || !workspaceId) return false;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch(`/api/workspaces/${workspaceId}`, { 
+        method: 'DELETE' 
+      });
+      if (!response.ok) throw new Error('Failed to delete workspace');
+      showAlert('success', 'Workspace deleted successfully');
+      
+      // Update the local state
+      setProjectWorkspaces(prev => prev.filter(workspace => workspace.id !== workspaceId));
+      
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+      showAlert('error', `Failed to delete workspace: ${errorMessage}`);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, showAlert]);
+
   return {
     projectWorkspaces,
     isLoading,
     error,
     fetchProjectWorkspaces,
     addWorkspacesToProject,
+    removeWorkspaceFromProject,
   };
 };

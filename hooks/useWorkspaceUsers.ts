@@ -3,7 +3,7 @@ import { User } from '@/types/user';
 import { useAlert } from '@/contexts/AlertContext';
 
 export const useWorkspaceUsers = (workspaceId: string) => {
-  const [workspaceUsers, setWorkspaceUsers] = useState<User[]>([]);
+  const [workspaceUsers, setWorkspaceUsers] = useState<(User | { user: User })[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showAlert } = useAlert();
@@ -14,17 +14,26 @@ export const useWorkspaceUsers = (workspaceId: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      console.log('Fetching workspace users for workspace:', workspaceId);
+      
       const res = await fetch(`/api/workspaces/${workspaceId}/users`);
       const data = await res.json();
+      
+      console.log('Workspace users response:', { status: res.status, data });
+      
       if (!res.ok) throw new Error(data.error || 'Failed to load workspace users');
       if (!data) {
+        console.log('No data returned, setting empty array');
         setWorkspaceUsers([]);
         return [];
       }
+      
+      console.log('Setting workspace users:', data);
       setWorkspaceUsers(data);
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error('Error fetching workspace users:', err);
       setError(errorMessage);
       showAlert('error', `Failed to fetch workspace users: ${errorMessage}`);
       return [];
@@ -71,8 +80,10 @@ export const useWorkspaceUsers = (workspaceId: string) => {
       console.log('Success response:', data);
       
       showAlert('success', 'Users added to workspace successfully');
+      
       // Refresh the workspace users list
       await fetchWorkspaceUsers();
+      
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -94,8 +105,14 @@ export const useWorkspaceUsers = (workspaceId: string) => {
       if (!res.ok) throw new Error('Failed to remove user from workspace');
       showAlert('success', 'User removed from workspace successfully');
       
-      // Update the local state
-      setWorkspaceUsers(prev => prev.filter(user => user.id !== userId));
+      // Update the local state - need to handle both user formats
+      setWorkspaceUsers(prev => 
+        prev.filter(userData => {
+          // Type guard to check if userData has a 'user' property
+          const user = 'user' in userData ? userData.user : userData;
+          return user.id !== userId;
+        })
+      );
       
       return true;
     } catch (err) {

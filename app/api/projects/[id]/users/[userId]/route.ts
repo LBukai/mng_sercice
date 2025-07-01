@@ -11,7 +11,7 @@ export async function PATCH(
     const updatedProject = await updateUserRole(
       id,
       userId,
-      body
+      body.role
     );
     return NextResponse.json(updatedProject);
   } catch (err) {

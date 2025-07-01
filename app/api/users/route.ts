@@ -14,8 +14,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const newProject = await createUser(body);
-    return NextResponse.json(newProject, { status: 201 });
+    const newUser = await createUser(body);
+    return NextResponse.json(newUser, { status: 201 });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });

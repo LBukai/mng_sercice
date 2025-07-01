@@ -113,7 +113,34 @@ export const useUsers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const updatedUser = await updateUserApi(id, userData);
+      
+      console.log('Updating user:', { id, userData });
+      console.log('Making PUT request to:', `/api/users/${id}`);
+      
+      // Make the API call directly here instead of using the service
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      console.log('Update response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Update failed:', errorData);
+        throw new Error(errorData.error || `Failed to update user: ${response.status} ${response.statusText}`);
+      }
+      
+      const updatedUser = await response.json();
+      console.log('Updated user:', updatedUser);
+      
       setUsers(prev => 
         prev.map(user => user.id === id ? { ...user, ...updatedUser } : user)
       );
@@ -121,6 +148,7 @@ export const useUsers = () => {
       return updatedUser;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error('Error in updateUser:', err);
       setError(errorMessage);
       showAlert('error', `Failed to update user: ${errorMessage}`);
       return null;

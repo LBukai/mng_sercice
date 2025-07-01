@@ -6,7 +6,7 @@ import { Modal } from '@/components/common/Modal';
 import { AddWorkspaceUsersForm } from './AddWorkspaceUsersForm';
 
 interface WorkspaceUsersTableProps {
-  workspaceUsers: User[];
+  workspaceUsers: (User | { user: User })[];  // Handle both formats
   workspace: Workspace;
   isLoading: boolean;
   error: string | null;
@@ -84,40 +84,45 @@ export const WorkspaceUsersTable = ({
                   <SkeletonLoader type="table-row" count={3} />
                 </>
               ) : workspaceUsers.length > 0 ? (
-                workspaceUsers.map((user, index) => (
-                  <tr key={user.id || `user-${index}`} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-700">
+                workspaceUsers.map((userData, index) => {
+                  // Handle both formats: direct User object or {user: User} object
+                  const user = 'user' in userData ? userData.user : userData;
+                  
+                  return (
+                    <tr key={user.id || `user-${index}`} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                              <span className="text-sm font-medium text-gray-700">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
                               {user.name}
-                            </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {user.name}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.username}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleRemoveUser(user.id!, user.name)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.username}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleRemoveUser(user.id!, user.name)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">

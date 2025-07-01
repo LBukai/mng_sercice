@@ -49,7 +49,8 @@ export default function ProjectDetailsPage() {
     isLoading: workspacesLoading,
     error: workspacesError,
     fetchProjectWorkspaces,
-    addWorkspacesToProject
+    addWorkspacesToProject,
+    removeWorkspaceFromProject
   } = useProjectWorkspaces(projectId);
   
   const {
@@ -206,6 +207,7 @@ export default function ProjectDetailsPage() {
               isLoading={workspacesLoading}
               error={workspacesError}
               onAddWorkspace={handleAddWorkspace}
+              onRemoveWorkspace={removeWorkspaceFromProject}
             />
           </div>
 

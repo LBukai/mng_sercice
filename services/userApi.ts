@@ -1,5 +1,3 @@
-// services/api.ts
-
 "use server";
 import { User } from "@/types/user";
 import { auth } from "@/app/auth";
@@ -49,7 +47,7 @@ export async function updateUser(
   userData: Partial<User>
 ): Promise<User> {
   const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-    method: "PUT",
+    method: "PUT", // Using PUT as per OpenAPI spec
     headers: await getAuthHeaders(),
     body: JSON.stringify(userData),
   });
