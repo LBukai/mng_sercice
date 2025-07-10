@@ -113,8 +113,6 @@ export default function EditUserPage() {
     try {
       setIsSaving(true);
       
-      console.log('Submitting user update:', { userId, formData });
-      
       const response = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
         headers: {
@@ -123,20 +121,13 @@ export default function EditUserPage() {
         body: JSON.stringify(formData),
       });
 
-      console.log('Update response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Update failed:', errorData);
         throw new Error(errorData.error || `Failed to update user: ${response.status} ${response.statusText}`);
       }
 
-      const updatedUser = await response.json();
-      console.log('User updated successfully:', updatedUser);
+      //const updatedUser = await response.json();
       
       showAlert('success', 'User updated successfully');
       router.push(`/users/${userId}`);

@@ -9,7 +9,7 @@ export const authApiService = {
     // Create the basic auth header
     const basicAuth = btoa(`${username}:${password}`);
     
-    const response = await fetch('http://localhost:8080/login', {
+    const response = await fetch(`${process.env.API_BASE_URL}/login`, {
       method: 'GET',
       headers: {
         'Authorization': `Basic ${basicAuth}`,
@@ -32,7 +32,6 @@ export const authApiService = {
 
   // Store tokens in localStorage
   storeTokens: (tokens: AuthTokens) => {
-    console.log(tokens.access_token);
     localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('refresh_token', tokens.refresh_token);
   },

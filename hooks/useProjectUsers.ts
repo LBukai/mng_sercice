@@ -63,7 +63,6 @@ export const useProjectUsers = (projectId: string) => {
   }, [projectId, fetchProjectUsers, showAlert]);
 
   const updateUserRole = useCallback(async (userId: string, role: ProjectRole) => {
-    console.log("Updating user role:", userId, role);
     if (!projectId || !userId) return false;
     
     try {
@@ -72,7 +71,6 @@ export const useProjectUsers = (projectId: string) => {
       
       // Wrap the role in an object as expected by the API
       const payload = { role: role };
-      console.log("Sending payload:", payload);
       
       const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { 
         method: 'PATCH', 

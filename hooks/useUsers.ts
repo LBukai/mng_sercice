@@ -48,7 +48,6 @@ export const useUsers = () => {
       setError(null);
       
       // Log the data being sent for debugging
-      console.log('Creating user with data:', userData);
       
       const newUser = await createUserApi(userData);
       setUsers(prev => [...prev, newUser]);
@@ -56,7 +55,6 @@ export const useUsers = () => {
       return newUser;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      console.error('Error creating user:', err, 'User data:', userData);
       setError(errorMessage);
       showAlert('error', `Failed to create user: ${errorMessage}`);
       return null;
@@ -114,7 +112,6 @@ export const useUsers = () => {
       setIsLoading(true);
       setError(null);
       
-      console.log('Updating user:', { id, userData });
       
       // Use direct API call instead of server action for client components
       const response = await fetch(`/api/users/${id}`, {
@@ -125,11 +122,6 @@ export const useUsers = () => {
         body: JSON.stringify(userData),
       });
 
-      console.log('Update response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -138,7 +130,6 @@ export const useUsers = () => {
       }
 
       const updatedUser = await response.json();
-      console.log('Updated user:', updatedUser);
       
       setUsers(prev => 
         prev.map(user => user.id === id ? { ...user, ...updatedUser } : user)

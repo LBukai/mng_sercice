@@ -14,21 +14,17 @@ export const useWorkspaceUsers = (workspaceId: string) => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Fetching workspace users for workspace:', workspaceId);
       
       const res = await fetch(`/api/workspaces/${workspaceId}/users`);
       const data = await res.json();
       
-      console.log('Workspace users response:', { status: res.status, data });
       
       if (!res.ok) throw new Error(data.error || 'Failed to load workspace users');
       if (!data) {
-        console.log('No data returned, setting empty array');
         setWorkspaceUsers([]);
         return [];
       }
       
-      console.log('Setting workspace users:', data);
       setWorkspaceUsers(data);
       return data;
     } catch (err) {
@@ -55,8 +51,6 @@ export const useWorkspaceUsers = (workspaceId: string) => {
         user_id: parseInt(userId, 10) // Convert to number as per API spec
       }));
       
-      console.log('Adding users to workspace:', workspaceId);
-      console.log('Payload:', payload);
       
       const res = await fetch(`/api/workspaces/${workspaceId}/users`, { 
         method: 'POST', 
@@ -77,7 +71,6 @@ export const useWorkspaceUsers = (workspaceId: string) => {
       }
       
       const data = await res.json();
-      console.log('Success response:', data);
       
       showAlert('success', 'Users added to workspace successfully');
       

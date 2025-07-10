@@ -11,7 +11,7 @@ interface FAQ {
 const faqs: FAQ[] = [
   {
     question: 'How do I add a new user?',
-    answer: 'To add a new user, go to the Users page and click on the "Add User" button. Fill in the required information in the form that appears and click "Add User" to create a new user account.'
+    answer: 'To add a new user, go to the Users page and click on the "Add User" button. Fill in the required information in the form that appears and click "Add User" to create a new user account. If you cant se user page you are not a Admin of the system. Only administrators can create users'
   },
   {
     question: 'How do I update user information?',
@@ -22,33 +22,45 @@ const faqs: FAQ[] = [
     answer: 'To delete a user, go to the Users page, find the user you want to remove, and click the "Delete" button in the Actions column. A confirmation dialog will appear; click "Delete" to confirm the removal of the user.'
   },
   {
-    question: 'Where can I change the API settings?',
-    answer: 'API settings can be changed in the Settings page. Navigate to the Settings page from the sidebar menu, and you will find the API configuration section at the top.'
+    question: 'How can i add multiple users at once?',
+    answer: 'To add a new user, go to the Users page and click on the "Add Multiple User" button. Upload your structured json and press Add users. You can get the the template for the json by clicking Download JSON template'
   },
   {
-    question: 'How do I enable or disable notifications?',
-    answer: 'Notification settings can be managed in the Settings page. Go to the Settings page from the sidebar menu and look for the Notification Settings section where you can toggle various notification options.'
+    question: 'How create',
+    answer: 'To add a new user, go to the Users page and click on the "Add Multiple User" button. Upload your structured json and press Add users. You can get the the template for the json by clicking Download JSON template'
   },
   {
-    question: 'Can I customize the display settings?',
-    answer: 'Yes, you can customize display settings such as dark mode, compact view, language, and items per page in the Settings page under the Display Settings section.'
+    question: 'How do I add a new Project?',
+    answer: 'To add a new user, go to the Projects page and click on the "Add Project" button. Fill in the required information in the form that appears and click "Add Project" to create a new project. If you cant se project page you are not a Admin of the system. Only administrators can create projects'
   },
   {
-    question: 'How do I get started with this application?',
-    answer: 'To get started, first ensure you have the correct API configuration in the Settings page. After that, you can begin by adding users through the Users page and exploring other features from the dashboard.'
+    question: 'Who can edit Project informations?',
+    answer: 'Only administrators can edit Project informations'
   },
   {
-    question: 'Is there a mobile version of this application?',
-    answer: 'This application is responsive and works on mobile devices. The layout will automatically adjust to fit your screen size.'
+    question: 'Who can manage users in a project?',
+    answer: 'Administrators can manage user in any project. Users can only manage users within projects where they have the role project lead'
   },
   {
-    question: 'How do I report a bug or request a feature?',
-    answer: 'To report a bug or request a feature, please contact our support team or submit an issue through our support portal. You can find contact information in the About section.'
+    question: 'Who can manage workspaces in a project?',
+    answer: 'Administrators can manage workspaces in any project. Users can only manage workspaces within projects where they have the role project lead'
   },
   {
-    question: 'How secure is my data?',
-    answer: 'Your data is encrypted during transmission and securely stored. We implement industry-standard security measures to protect your information, including regular security audits and updates.'
-  }
+    question: 'Who can manage files in a project?',
+    answer: 'Administrators can manage files in any project. Users can only manage files within projects where they have the role project lead'
+  },
+  {
+    question: 'How can I add users to a workspace?',
+    answer: 'To add a user to a workspace, the user has to be in the project where the workspace belong to. If they are not in the project add them first to the project. In the woerkspace page you can click add user. In the modal you will see all the users that are in the project and not yet assaigned to the workspace.'
+  },
+  {
+    question: 'How can I add files to a workspace?',
+    answer: 'To add a file to a workspace, the file has to be in the project where the workspace belong to. If its are not in the project add it first to the project. In the woerkspace page you can click add file. In the modal you will see all the files that are in the project and not yet assaigned to the workspace.'
+  },
+  {
+    question: 'What types of file can be uploaded?',
+    answer: 'Any text based types can be uploaded for example PDFs, word documents, CSV, codebases, and more. For more information check anythingLlm documentation.'
+  },
 ];
 
 export default function HelpPage() {
@@ -178,37 +190,6 @@ export default function HelpPage() {
           
           <div className="border border-gray-200 rounded-md p-4 hover:border-blue-500 transition-colors">
             <div className="flex items-center mb-3">
-              <div className="p-2 bg-green-100 rounded-full mr-3">
-                <svg
-                  className="h-6 w-6 text-green-600"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-md font-medium text-gray-900">Live Chat</h3>
-            </div>
-            <p className="text-sm text-gray-600 mb-3">
-              Get instant help from our support agents through our live chat service available during business hours.
-            </p>
-            <button
-              className="text-sm font-medium text-blue-600 hover:text-blue-800"
-              onClick={() => alert('Live chat feature would open here!')}
-            >
-              Start a chat session
-            </button>
-          </div>
-          
-          <div className="border border-gray-200 rounded-md p-4 hover:border-blue-500 transition-colors">
-            <div className="flex items-center mb-3">
               <div className="p-2 bg-purple-100 rounded-full mr-3">
                 <svg
                   className="h-6 w-6 text-purple-600"
@@ -231,45 +212,15 @@ export default function HelpPage() {
               Access our comprehensive documentation for detailed instructions on using all features of the application.
             </p>
             <a
-              href="#"
+              href="https://weedag.sharepoint.com/sites/--DARE/SitePages/Open-EDAG-AI-Plattform.aspx"
               className="text-sm font-medium text-blue-600 hover:text-blue-800"
-              onClick={(e) => { e.preventDefault(); alert('Documentation would open here!'); }}
+              target="_blank"
+              rel="noopener noreferrer"
             >
               View documentation
             </a>
           </div>
-          
-          <div className="border border-gray-200 rounded-md p-4 hover:border-blue-500 transition-colors">
-            <div className="flex items-center mb-3">
-              <div className="p-2 bg-yellow-100 rounded-full mr-3">
-                <svg
-                  className="h-6 w-6 text-yellow-600"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-md font-medium text-gray-900">Video Tutorials</h3>
-            </div>
-            <p className="text-sm text-gray-600 mb-3">
-              Watch our video tutorials to learn how to use different features of the application effectively.
-            </p>
-            <a
-              href="#"
-              className="text-sm font-medium text-blue-600 hover:text-blue-800"
-              onClick={(e) => { e.preventDefault(); alert('Video tutorials would open here!'); }}
-            >
-              Watch tutorials
-            </a>
-          </div>
+
         </div>
       </div>
     </div>

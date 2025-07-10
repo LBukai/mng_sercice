@@ -2,7 +2,7 @@
 import { User } from "@/types/user";
 import { auth } from "@/app/auth";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.API_BASE_URL;//"http://localhost:8080";
 
 const getAuthHeaders = async () => {
   const session = await auth();
@@ -28,18 +28,18 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function createUser(userData: Omit<User, "id">): Promise<User> {
-  console.log(JSON.stringify(userData));
   const response = await fetch(`${API_BASE_URL}/users`, {
     method: "POST",
     headers: await getAuthHeaders(),
     body: JSON.stringify(userData),
   });
+  let data = await response.json()
 
   if (!response.ok) {
-    throw new Error(`Failed to create user: ${response.statusText}`);
+    throw new Error(`Failed to create user: ${data.error}`);
   }
 
-  return response.json();
+  return data;
 }
 
 export async function updateUser(

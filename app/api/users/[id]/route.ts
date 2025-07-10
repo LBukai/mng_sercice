@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/auth";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.API_BASE_URL;//"http://localhost:8080";
 
 const getAuthHeaders = async () => {
   const session = await auth();
@@ -19,7 +19,6 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    console.log('GET user by ID:', id);
     
     const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: "GET",
@@ -46,8 +45,6 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    
-    console.log('PUT user update:', { id, body });
     
     // Check authentication
     const session = await auth();
@@ -83,12 +80,6 @@ export async function PUT(
       });
     }
 
-    console.log('Backend response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Backend error:', errorData);
@@ -96,7 +87,7 @@ export async function PUT(
     }
 
     const updatedUser = await response.json();
-    console.log('User updated successfully:', updatedUser);
+    console.log('User updated successfully:');
     return NextResponse.json(updatedUser);
   } catch (err) {
     console.error('Error updating user:', err);
@@ -128,12 +119,6 @@ export async function PATCH(
       body: JSON.stringify(body),
     });
 
-    console.log('Backend response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Backend error:', errorData);
@@ -141,7 +126,7 @@ export async function PATCH(
     }
 
     const updatedUser = await response.json();
-    console.log('User updated successfully:', updatedUser);
+    console.log('User updated successfully:');
     return NextResponse.json(updatedUser);
   } catch (err) {
     console.error('Error updating user:', err);
@@ -156,7 +141,6 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    console.log('DELETE user:', id);
     
     // Check authentication
     const session = await auth();

@@ -24,7 +24,6 @@ export const AddWorkspaceUsersForm = ({
   // Fetch users assigned to the project that this workspace belongs to
   useEffect(() => {
     const fetchProjectUsers = async () => {
-      console.log('Workspace object:', workspace); // Debug log
       
       // First try to get the project ID from the workspace
       let projectId = workspace.project;
@@ -32,11 +31,9 @@ export const AddWorkspaceUsersForm = ({
       // If workspace.project is not available, try to fetch it from the workspace details
       if (!projectId && workspace.id) {
         try {
-          console.log('Fetching workspace details for ID:', workspace.id);
           const workspaceResponse = await fetch(`/api/workspaces/${workspace.id}`);
           if (workspaceResponse.ok) {
             const workspaceData = await workspaceResponse.json();
-            console.log('Fetched workspace data:', workspaceData); // Debug log
             projectId = workspaceData.project || workspaceData.project_id || workspaceData.projectId;
           }
         } catch (err) {
@@ -65,14 +62,12 @@ export const AddWorkspaceUsersForm = ({
         setIsLoading(true);
         setError(null);
         
-        console.log('Fetching users for project:', projectId);
         const response = await fetch(`/api/projects/${projectId}/users`);
         if (!response.ok) {
           throw new Error('Failed to fetch project users');
         }
         
         const users = await response.json();
-        console.log('Fetched project users:', users);
         
         // Filter out users that are already in the workspace
         const availableUsers = users.filter((projectUser: ProjectUser) => 

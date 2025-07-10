@@ -24,7 +24,6 @@ export const AddWorkspaceFilesForm = ({
   // Fetch files assigned to the project that this workspace belongs to
   useEffect(() => {
     const fetchProjectFiles = async () => {
-      console.log('Workspace object:', workspace);
       
       // First try to get the project ID from the workspace
       let projectId = workspace.project;
@@ -32,11 +31,9 @@ export const AddWorkspaceFilesForm = ({
       // If workspace.project is not available, try to fetch it from the workspace details
       if (!projectId && workspace.id) {
         try {
-          console.log('Fetching workspace details for ID:', workspace.id);
           const workspaceResponse = await fetch(`/api/workspaces/${workspace.id}`);
           if (workspaceResponse.ok) {
             const workspaceData = await workspaceResponse.json();
-            console.log('Fetched workspace data:', workspaceData);
             projectId = workspaceData.project || workspaceData.project_id || workspaceData.projectId;
           }
         } catch (err) {
@@ -64,14 +61,12 @@ export const AddWorkspaceFilesForm = ({
         setIsLoading(true);
         setError(null);
         
-        console.log('Fetching files for project:', projectId);
         const response = await fetch(`/api/projects/${projectId}/files`);
         if (!response.ok) {
           throw new Error('Failed to fetch project files');
         }
         
         const files = await response.json();
-        console.log('Fetched project files:', files);
         
         // Filter out files that are already in the workspace
         const availableFiles = files.filter((file: File) => 

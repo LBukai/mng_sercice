@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/auth";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.API_BASE_URL;//"http://localhost:8080";
 
 const getAuthHeaders = async () => {
   const session = await auth();

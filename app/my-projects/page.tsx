@@ -6,16 +6,38 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { useUserProjects } from '@/hooks/useUserProjects';
 import { UserProject } from '@/types/userProject';
+import { useSession } from 'next-auth/react';
 
 export default function MyProjectsPage() {
   const { userProjects, isLoading, error, fetchUserProjects } = useUserProjects();
-  
-  // Hardcoded user ID as requested
-  const userId = '25';
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    fetchUserProjects(userId);
-  }, [fetchUserProjects, userId]);
+    if (session?.user?.id) {
+      fetchUserProjects(session.user.id);
+    }
+  }, [fetchUserProjects, session]);
+
+  const userId = session?.user?.id;
+
+  if (status === 'loading') {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return (
+      <div className="text-center py-16">
+        <h3 className="text-xl font-medium text-gray-900 mb-3">Not Authenticated</h3>
+        <p className="text-gray-500 mb-6 max-w-md mx-auto">
+          You must be logged in to view your projects.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -27,7 +49,7 @@ export default function MyProjectsPage() {
             {error}
           </div>
         )}
-        
+
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <LoadingSpinner size="lg" />

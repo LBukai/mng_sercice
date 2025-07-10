@@ -46,9 +46,6 @@ export const useWorkspaceFiles = (workspaceId: string) => {
         id: parseInt(fileId, 10) // Convert to number as per API spec
       }));
       
-      console.log('Adding files to workspace:', workspaceId);
-      console.log('Payload:', payload);
-      console.log('Original fileIds:', fileIds);
       
       const res = await fetch(`/api/workspaces/${workspaceId}/files`, { 
         method: 'POST', 
@@ -56,15 +53,11 @@ export const useWorkspaceFiles = (workspaceId: string) => {
         body: JSON.stringify(payload)
       });
       
-      console.log('Response status:', res.status);
-      console.log('Response headers:', res.headers);
       
       let errorData;
       try {
         errorData = await res.json();
-        console.log('Response data:', errorData);
       } catch (parseError) {
-        console.log('Failed to parse response as JSON:', parseError);
         errorData = { error: `HTTP ${res.status}: ${res.statusText}` };
       }
       
@@ -79,9 +72,7 @@ export const useWorkspaceFiles = (workspaceId: string) => {
         
         throw new Error(errorData.error || `Failed to add files (${res.status}: ${res.statusText})`);
       }
-      
-      console.log('Success response:', errorData);
-      
+            
       showAlert('success', 'Files added to workspace successfully');
       // Refresh the workspace files list
       await fetchWorkspaceFiles();

@@ -49,7 +49,7 @@ declare module "next-auth/jwt" {
 // Function to get current user data from /login endpoint using Bearer token
 async function getCurrentUser(bearerToken: string) {
   try {
-    const response = await fetch('http://localhost:8080/login', {
+    const response = await fetch(`${process.env.API_BASE_URL}/login`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${bearerToken}`,
@@ -142,7 +142,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.isAdmin = account.userData.isAdmin;
         } else if (user) {
           // Fallback to EntraID user data if backend call failed
-          token.userId = user.id || '25'; // Fallback to '25' if no ID
+          token.userId = user.id; // Fallback to '25' if no ID
           token.userName = user.name || '';
           token.userEmail = user.email || '';
           token.username = user.email?.split('@')[0]; // Generate username from email
