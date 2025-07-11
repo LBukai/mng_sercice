@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Project } from '@/types/project';
 import { useAlert } from '@/contexts/AlertContext';
+import { handleApiError, ApiError } from '@/utils/apiErrorHandler';
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -12,15 +13,30 @@ export const useProjects = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch('/api/projects')
+      
+      const res = await fetch('/api/projects');
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to load projects');
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load projects');
       setProjects(data);
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to fetch projects: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        // API errors (including auth errors) are handled by handleApiError
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          // Don't show alert for auth errors as user will be redirected
+          showAlert('error', `Failed to fetch projects: ${err.message}`);
+        }
+      } else {
+        // Network or other errors
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to fetch projects: ${errorMessage}`);
+      }
       return [];
     } finally {
       setIsLoading(false);
@@ -31,14 +47,26 @@ export const useProjects = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/projects/${id}`)
-      const data =await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load project');
+      
+      const res = await fetch(`/api/projects/${id}`);
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to load project');
+      }
+      
+      const data = await res.json();
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to fetch project: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to fetch project: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to fetch project: ${errorMessage}`);
+      }
       return null;
     } finally {
       setIsLoading(false);
@@ -49,16 +77,34 @@ export const useProjects = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/projects`, { method: 'POST', body: JSON.stringify(projectData) })
+      
+      const res = await fetch(`/api/projects`, { 
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData) 
+      });
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to create project');
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create project');
       setProjects(prev => [...prev, data]);
       showAlert('success', 'Project created successfully');
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to create project: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to create project: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to create project: ${errorMessage}`);
+      }
       return null;
     } finally {
       setIsLoading(false);
@@ -69,18 +115,36 @@ export const useProjects = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/projects/${id}`, { method: 'PATCH', body: JSON.stringify(projectData) })
+      
+      const res = await fetch(`/api/projects/${id}`, { 
+        method: 'PATCH', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData) 
+      });
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to update project');
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update project');
       setProjects(prev => 
         prev.map(project => project.id === id ? { ...project, ...data } : project)
       );
       showAlert('success', 'Project updated successfully');
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to update project: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to update project: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to update project: ${errorMessage}`);
+      }
       return null;
     } finally {
       setIsLoading(false);
@@ -91,15 +155,27 @@ export const useProjects = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete project');
+      
+      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to delete project');
+      }
+      
       setProjects(prev => prev.filter(project => project.id !== id));
       showAlert('success', 'Project deleted successfully');
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to delete project: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to delete project: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to delete project: ${errorMessage}`);
+      }
       return false;
     } finally {
       setIsLoading(false);

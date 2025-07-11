@@ -59,6 +59,7 @@ export default function ProjectDetailsPage() {
     error: filesError,
     fetchProjectFiles,
     uploadFilesToProject,
+    updateFileTTL,
     removeFileFromProject
   } = useProjectFiles(projectId);
 
@@ -153,30 +154,38 @@ export default function ProjectDetailsPage() {
                   <dt className="text-sm font-medium text-gray-500">Project Name</dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{project.name}</dd>
                 </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Workspace Limit</dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
-                    <WorkspaceLimitBadge value={project.workspacecountLimit} />
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">User Limit</dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
-                    <UserLimitBadge value={project.usercountLimit} />
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Cost Center</dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
-                    <CostCenterBadge value={project.costCenter} />
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Project Number</dt>
-                  <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
-                    <ProjectNumberBadge value={project.projectNumber} />
-                  </dd>
-                </div>
+                {project.workspacecountLimit && (
+                  <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm font-medium text-gray-500">Workspace Limit</dt>
+                    <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                      <WorkspaceLimitBadge value={project.workspacecountLimit} />
+                    </dd>
+                  </div>
+                )}
+                {project.usercountLimit && (
+                  <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm font-medium text-gray-500">User Limit</dt>
+                    <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                      <UserLimitBadge value={project.usercountLimit} />
+                    </dd>
+                  </div>
+                )}
+                {project.costCenter && (
+                  <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm font-medium text-gray-500">Cost Center</dt>
+                    <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                      <CostCenterBadge value={project.costCenter} />
+                    </dd>
+                  </div>
+                )}
+                {project.projectNumber && (
+                  <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm font-medium text-gray-500">Project Number</dt>
+                    <dd className="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                      <ProjectNumberBadge value={project.projectNumber} />
+                    </dd>
+                  </div>
+                )}
                 <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Status</dt>
                   <dd className="mt-1 sm:mt-0 sm:col-span-2">
@@ -219,6 +228,7 @@ export default function ProjectDetailsPage() {
               isLoading={filesLoading}
               error={filesError}
               onUploadFiles={uploadFilesToProject}
+              onUpdateFileTTL={updateFileTTL}
               onRemoveFile={removeFileFromProject}
             />
           </div>

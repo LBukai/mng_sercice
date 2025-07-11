@@ -159,9 +159,9 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-900">New user registered</p>
-                <p className="text-sm text-gray-500">Jessica Smith</p>
-                <p className="text-xs text-gray-400">10 minutes ago</p>
+                <p className="text-sm font-medium text-gray-900">Not implemented</p>
+                <p className="text-sm text-gray-500">Not implemented</p>
+                <p className="text-xs text-gray-400">Not implemented</p>
               </div>
             </div>
             
@@ -174,9 +174,9 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-900">New project created</p>
-                <p className="text-sm text-gray-500">Project Alpha</p>
-                <p className="text-xs text-gray-400">1 hour ago</p>
+                <p className="text-sm font-medium text-gray-900">Not implemented</p>
+                <p className="text-sm text-gray-500">Not implemented</p>
+                <p className="text-xs text-gray-400">Not implemented</p>
               </div>
             </div>
             
@@ -189,9 +189,9 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-900">Low disk space warning</p>
-                <p className="text-sm text-gray-500">Server: Web-01</p>
-                <p className="text-xs text-gray-400">3 hours ago</p>
+                <p className="text-sm font-medium text-gray-900">Not implemented</p>
+                <p className="text-sm text-gray-500">Not implemented</p>
+                <p className="text-xs text-gray-400">Not implemented</p>
               </div>
             </div>
             
@@ -204,9 +204,9 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-900">Failed login attempt</p>
-                <p className="text-sm text-gray-500">IP: 192.168.1.1</p>
-                <p className="text-xs text-gray-400">4 hours ago</p>
+                <p className="text-sm font-medium text-gray-900">Not implemented</p>
+                <p className="text-sm text-gray-500">Not implemented</p>
+                <p className="text-xs text-gray-400">Not implemented</p>
               </div>
             </div>
           </div>

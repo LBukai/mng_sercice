@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 import { AuthLayoutWrapper } from '@/components/layout/AuthLayoutWrapper';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { SessionProvider } from 'next-auth/react';
+import { SessionHandler } from '@/components/auth/SessionHandler';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,9 +24,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <SessionProvider>
           <AlertProvider>
-            <AuthLayoutWrapper>
-              {children}
-            </AuthLayoutWrapper>
+            <SessionHandler>
+              <AuthLayoutWrapper>
+                {children}
+              </AuthLayoutWrapper>
+            </SessionHandler>
           </AlertProvider>
         </SessionProvider>
       </body>

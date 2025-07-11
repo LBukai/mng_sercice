@@ -18,6 +18,7 @@ declare module "next-auth" {
       isAdmin?: boolean;
       emailVerified?: Date | null;
     };
+    error?: "RefreshAccessTokenError";
   }
 
   interface Account {
@@ -38,11 +39,14 @@ declare module "next-auth/jwt" {
     /** OpenID ID Token */
     customAccessToken: string;
     accessToken: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
     userId?: string;
     userName?: string;
     userEmail?: string;
     username?: string;
     isAdmin?: boolean;
+    error?: "RefreshAccessTokenError";
   }
 }
 
@@ -69,12 +73,57 @@ async function getCurrentUser(bearerToken: string) {
   }
 }
 
+// Function to refresh the access token
+async function refreshAccessToken(token: JWT): Promise<JWT> {
+  try {
+    if (!token.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`https://login.microsoftonline.com/${process.env.NEXT_PUBLIC_AZURE_AD_TENANT_ID}/oauth2/v2.0/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: process.env.NEXT_PUBLIC_AZURE_AD_CLIENT_ID!,
+        client_secret: process.env.AZURE_AD_CLIENT_SECRET!,
+        grant_type: 'refresh_token',
+        refresh_token: token.refreshToken,
+        scope: process.env.AZURE_AD_SCOPE || 'openid profile email offline_access',
+      }),
+    });
+
+    const refreshedTokens = await response.json();
+
+    if (!response.ok) {
+      throw refreshedTokens;
+    }
+
+    return {
+      ...token,
+      accessToken: refreshedTokens.access_token,
+      customAccessToken: refreshedTokens.access_token,
+      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+    };
+  } catch (error) {
+    console.error('Error refreshing access token:', error);
+    return {
+      ...token,
+      error: "RefreshAccessTokenError",
+    };
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/login",
+    error: "/login", // Redirect errors to login page
   },
   session: {
     strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   providers: [
     MicrosoftEntraID({
@@ -124,13 +173,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async jwt({ token, account, user }) {
-      // On initial sign-in, account will be present
-      if (account) {
-        const accountToken = account.access_token || account.id_token || account.customAccessToken;
+      // Initial sign-in
+      if (account && user) {
+        const accessToken = account.access_token || account.id_token || account.customAccessToken;
         
-        if (accountToken) {
-          token.customAccessToken = accountToken;
-          token.accessToken = accountToken;
+        if (accessToken) {
+          token.customAccessToken = accessToken;
+          token.accessToken = accessToken;
+          token.refreshToken = account.refresh_token;
+          // Set expiry time (default to 1 hour if not provided)
+          token.accessTokenExpires = account.expires_at 
+            ? account.expires_at * 1000 
+            : Date.now() + 60 * 60 * 1000;
         }
         
         // Store user data from /login endpoint if available
@@ -142,17 +196,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.isAdmin = account.userData.isAdmin;
         } else if (user) {
           // Fallback to EntraID user data if backend call failed
-          token.userId = user.id; // Fallback to '25' if no ID
+          token.userId = user.id;
           token.userName = user.name || '';
           token.userEmail = user.email || '';
-          token.username = user.email?.split('@')[0]; // Generate username from email
-          token.isAdmin = false; // Default to non-admin if backend unavailable
+          token.username = user.email?.split('@')[0];
+          token.isAdmin = false;
         }
       }
-      
-      return token;
+
+      // Check if token is expired and needs refresh
+      if (token.accessTokenExpires && Date.now() < token.accessTokenExpires) {
+        // Token is still valid
+        return token;
+      }
+
+      // Token has expired, try to refresh it
+      console.log('Access token expired, attempting refresh...');
+      return refreshAccessToken(token);
     },
     async session({ session, token }) {
+      // Handle token refresh errors
+      if (token.error === "RefreshAccessTokenError") {
+        // Force sign out
+        session.error = "RefreshAccessTokenError";
+        return session;
+      }
+
       // Expose the token to the client session
       if (token?.customAccessToken) {
         session.customAccessToken = token.customAccessToken;

@@ -59,6 +59,57 @@ export const useProjectFiles = (projectId: string) => {
     }
   }, [projectId, fetchProjectFiles, showAlert]);
 
+  const updateFileTTL = useCallback(async (fileId: string, ttl: string) => {
+    if (!projectId || !fileId) return false;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Try the file-specific endpoint first
+      let response = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ttl }),
+      });
+
+      // If that fails with 404, try a different approach
+      if (!response.ok && response.status === 404) {
+        // Fallback: try updating via the files collection endpoint
+        response = await fetch(`/api/projects/${projectId}/files`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fileId, ttl }),
+        });
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to update file TTL: ${response.statusText}`);
+      }
+
+      showAlert('success', 'File TTL updated successfully');
+      
+      // Update the local state
+      setProjectFiles(prev => prev.map(file => 
+        file.id === fileId ? { ...file, ttl } : file
+      ));
+      
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+      showAlert('error', `Failed to update file TTL: ${errorMessage}`);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, showAlert]);
+
   const removeFileFromProject = useCallback(async (fileId: string) => {
     if (!projectId || !fileId) return false;
     
@@ -99,6 +150,7 @@ export const useProjectFiles = (projectId: string) => {
     error,
     fetchProjectFiles,
     uploadFilesToProject,
+    updateFileTTL,
     removeFileFromProject,
   };
 };

@@ -12,8 +12,6 @@ export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormProps) =
   
   const [formData, setFormData] = useState<Project>({
     name: '',
-    workspacecountLimit: 5,
-    usercountLimit: 20,
     costCenter: '',
     projectNumber: '',
     ...project,
@@ -21,47 +19,28 @@ export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormProps) =
 
   const [errors, setErrors] = useState<{
     name?: string;
-    workspacecountLimit?: string;
-    usercountLimit?: string;
     costCenter?: string;
     projectNumber?: string;
   }>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     
-    if (type === 'number') {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value === '' ? undefined : parseInt(value, 10),
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const validateForm = () => {
     const newErrors: {
       name?: string;
-      workspacecountLimit?: string;
-      usercountLimit?: string;
       costCenter?: string;
       projectNumber?: string;
     } = {};
     
     if (!formData.name?.trim()) {
       newErrors.name = 'Project name is required';
-    }
-    
-    if (formData.workspacecountLimit !== undefined && formData.workspacecountLimit <= 0) {
-      newErrors.workspacecountLimit = 'Workspace limit must be a positive number';
-    }
-    
-    if (formData.usercountLimit !== undefined && formData.usercountLimit <= 0) {
-      newErrors.usercountLimit = 'User limit must be a positive number';
     }
     
     setErrors(newErrors);
@@ -100,48 +79,6 @@ export const ProjectForm = ({ project, onSubmit, onCancel }: ProjectFormProps) =
           {errors.name && (
             <p className="mt-1 text-sm text-red-600">{errors.name}</p>
           )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="workspacecountLimit" className="block text-sm font-medium text-gray-700 mb-1">
-              Workspace Limit
-            </label>
-            <input
-              type="number"
-              id="workspacecountLimit"
-              name="workspacecountLimit"
-              value={formData.workspacecountLimit || ''}
-              onChange={handleChange}
-              min="1"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.workspacecountLimit ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.workspacecountLimit && (
-              <p className="mt-1 text-sm text-red-600">{errors.workspacecountLimit}</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="usercountLimit" className="block text-sm font-medium text-gray-700 mb-1">
-              User Limit
-            </label>
-            <input
-              type="number"
-              id="usercountLimit"
-              name="usercountLimit"
-              value={formData.usercountLimit || ''}
-              onChange={handleChange}
-              min="1"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.usercountLimit ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.usercountLimit && (
-              <p className="mt-1 text-sm text-red-600">{errors.usercountLimit}</p>
-            )}
-          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

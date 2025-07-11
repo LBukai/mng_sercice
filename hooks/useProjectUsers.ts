@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAlert } from '@/contexts/AlertContext';
 import { UserAndRole, ProjectRole, ProjectUser } from '@/types/projectUser';
+import { handleApiError, ApiError } from '@/utils/apiErrorHandler';
 
 export const useProjectUsers = (projectId: string) => {
   const [projectUsers, setProjectUsers] = useState<ProjectUser[]>([]);
@@ -14,19 +15,31 @@ export const useProjectUsers = (projectId: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const res = await fetch(`/api/projects/${projectId}/users`);
-      const data =await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load project users');
-      if(!data){
-        setProjectUsers(<ProjectUser[]>([]));
-        return <ProjectUser[]>([]);
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to load project users');
+      }
+      
+      const data = await res.json();
+      if (!data) {
+        setProjectUsers([]);
+        return [];
       }
       setProjectUsers(data);
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to fetch project users: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to fetch project users: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to fetch project users: ${errorMessage}`);
+      }
       return [];
     } finally {
       setIsLoading(false);
@@ -39,6 +52,7 @@ export const useProjectUsers = (projectId: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const res = await fetch(`/api/projects/${projectId}/users`, { 
         method: 'POST', 
         headers: {
@@ -46,16 +60,25 @@ export const useProjectUsers = (projectId: string) => {
         },
         body: JSON.stringify(usersData) 
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add users');
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to add users');
+      }
+      
       showAlert('success', 'Users added to project successfully');
-      // Refresh the project users list
       await fetchProjectUsers();
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to add users to project: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to add users to project: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to add users to project: ${errorMessage}`);
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -69,7 +92,6 @@ export const useProjectUsers = (projectId: string) => {
       setIsLoading(true);
       setError(null);
       
-      // Wrap the role in an object as expected by the API
       const payload = { role: role };
       
       const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { 
@@ -81,13 +103,11 @@ export const useProjectUsers = (projectId: string) => {
       });
       
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to update user role');
+        await handleApiError(res, 'Failed to update user role');
       }
       
       showAlert('success', 'User role updated successfully');
       
-      // Update the local state
       setProjectUsers(prev => 
         prev.map(pu => 
           pu.user.id === userId 
@@ -98,9 +118,16 @@ export const useProjectUsers = (projectId: string) => {
       
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to update user role: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to update user role: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to update user role: ${errorMessage}`);
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -113,18 +140,29 @@ export const useProjectUsers = (projectId: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const res = await fetch(`/api/projects/${projectId}/users/${userId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to remove user from project');
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to remove user from project');
+      }
+      
       showAlert('success', 'User removed from project successfully');
       
-      // Update the local state
       setProjectUsers(prev => prev.filter(pu => pu.user.id !== userId));
       
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to remove user from project: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to remove user from project: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to remove user from project: ${errorMessage}`);
+      }
       return false;
     } finally {
       setIsLoading(false);

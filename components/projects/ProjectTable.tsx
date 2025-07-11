@@ -4,10 +4,6 @@ import { Project } from '@/types/project';
 import { ProjectForm } from './ProjectForm';
 import { Modal } from '@/components/common/Modal';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
-import { 
-  WorkspaceLimitBadge, 
-  UserLimitBadge 
-} from '@/components/projects/ProjectBadge';
 import { useProjects } from '@/hooks/useProjects';
 
 interface ProjectTableProps {
@@ -24,6 +20,7 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const { createProject, updateProject, deleteProject } = useProjects();
 
@@ -46,6 +43,19 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
     if (fieldA < fieldB) return sortDirection === 'asc' ? -1 : 1;
     if (fieldA > fieldB) return sortDirection === 'asc' ? 1 : -1;
     return 0;
+  });
+
+  // Filter projects based on search term
+  const filteredProjects = sortedProjects.filter(project => {
+    if (!searchTerm.trim()) return true;
+    
+    const search = searchTerm.toLowerCase();
+    return (
+      (project.name || '').toLowerCase().includes(search) ||
+      String(project.id || '').toLowerCase().includes(search) ||
+      (project.costCenter || '').toLowerCase().includes(search) ||
+      (project.projectNumber || '').toLowerCase().includes(search)
+    );
   });
 
   const handleAddProject = async (projectData: Omit<Project, 'id'>) => {
@@ -98,6 +108,38 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search projects..."
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          />
+          <svg
+            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+        {searchTerm && (
+          <p className="mt-2 text-sm text-gray-600">
+            Showing {filteredProjects.length} of {projects.length} projects
+          </p>
+        )}
+      </div>
+
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white">
           <thead>
@@ -125,22 +167,22 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
                 )}
               </th>
               <th 
-                className="py-3 px-6 text-center cursor-pointer"
-                onClick={() => handleSort('workspacecountLimit')}
+                className="py-3 px-6 text-left cursor-pointer"
+                onClick={() => handleSort('costCenter')}
               >
-                Workspace Limit
-                {sortField === 'workspacecountLimit' && (
+                Cost Center
+                {sortField === 'costCenter' && (
                   <span className="ml-1">
                     {sortDirection === 'asc' ? '↑' : '↓'}
                   </span>
                 )}
               </th>
               <th 
-                className="py-3 px-6 text-center cursor-pointer"
-                onClick={() => handleSort('usercountLimit')}
+                className="py-3 px-6 text-left cursor-pointer"
+                onClick={() => handleSort('projectNumber')}
               >
-                User Limit
-                {sortField === 'usercountLimit' && (
+                Project Number
+                {sortField === 'projectNumber' && (
                   <span className="ml-1">
                     {sortDirection === 'asc' ? '↑' : '↓'}
                   </span>
@@ -158,7 +200,7 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
                 <SkeletonLoader type="table-row" count={5} />
               </>
             ) : sortedProjects.length > 0 ? (
-              sortedProjects.map((project) => (
+              filteredProjects.map((project) => (
                 <tr key={project.id} className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/projects/${project.id}`)}>
                   <td className="py-3 px-6 text-left whitespace-nowrap">
                     {project.id}
@@ -166,11 +208,11 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
                   <td className="py-3 px-6 text-left">
                     {project.name}
                   </td>
-                  <td className="py-3 px-6 text-center">
-                    <WorkspaceLimitBadge value={project.workspacecountLimit} />
+                  <td className="py-3 px-6 text-left">
+                    {project.costCenter || '-'}
                   </td>
-                  <td className="py-3 px-6 text-center">
-                    <UserLimitBadge value={project.usercountLimit} />
+                  <td className="py-3 px-6 text-left">
+                    {project.projectNumber || '-'}
                   </td>
                   <td className="py-3 px-6 text-right">
                     <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
@@ -193,7 +235,7 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
             ) : (
               <tr>
                 <td colSpan={5} className="py-6 text-center text-gray-500">
-                  No projects found
+                  {searchTerm ? `No projects found matching "${searchTerm}"` : 'No projects found'}
                 </td>
               </tr>
             )}

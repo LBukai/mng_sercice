@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Workspace } from '@/types/workspace';
 import { useAlert } from '@/contexts/AlertContext';
+import { handleApiError, ApiError } from '@/utils/apiErrorHandler';
 
 export const useWorkspaces = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -12,14 +13,26 @@ export const useWorkspaces = () => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const res = await fetch(`/api/workspaces/${id}`);
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to load workspace');
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load workspace');
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to fetch workspace: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to fetch workspace: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to fetch workspace: ${errorMessage}`);
+      }
       return null;
     } finally {
       setIsLoading(false);

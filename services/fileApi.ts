@@ -51,4 +51,37 @@ export const fileApiService = {
 
     return response.json();
   },
+
+  // Update file TTL
+  updateFileTTL: async (projectId: string, fileId: string, ttl: string): Promise<File> => {
+    const response = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ttl }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update file TTL: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Delete file from project
+  deleteFileFromProject: async (projectId: string, fileId: string): Promise<void> => {
+    const response = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete file from project: ${response.statusText}`);
+    }
+
+    // DELETE typically returns no content, so we don't need to parse JSON
+  },
 };

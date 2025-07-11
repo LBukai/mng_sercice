@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { File } from '@/types/file';
 import { useAlert } from '@/contexts/AlertContext';
+import { handleApiError, ApiError } from '@/utils/apiErrorHandler';
 
 export const useWorkspaceFiles = (workspaceId: string) => {
   const [workspaceFiles, setWorkspaceFiles] = useState<File[]>([]);
@@ -14,9 +15,14 @@ export const useWorkspaceFiles = (workspaceId: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const res = await fetch(`/api/workspaces/${workspaceId}/files`);
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to load workspace files');
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load workspace files');
       if (!data) {
         setWorkspaceFiles([]);
         return [];
@@ -24,9 +30,16 @@ export const useWorkspaceFiles = (workspaceId: string) => {
       setWorkspaceFiles(data);
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to fetch workspace files: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to fetch workspace files: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to fetch workspace files: ${errorMessage}`);
+      }
       return [];
     } finally {
       setIsLoading(false);
@@ -40,12 +53,9 @@ export const useWorkspaceFiles = (workspaceId: string) => {
       setIsLoading(true);
       setError(null);
       
-      // Convert to the format expected by the API according to OpenAPI spec
-      // POST /workspaces/{workspace_id}/files expects array of File objects with id
       const payload = fileIds.map(fileId => ({
         id: parseInt(fileId, 10) // Convert to number as per API spec
       }));
-      
       
       const res = await fetch(`/api/workspaces/${workspaceId}/files`, { 
         method: 'POST', 
@@ -53,35 +63,24 @@ export const useWorkspaceFiles = (workspaceId: string) => {
         body: JSON.stringify(payload)
       });
       
-      
-      let errorData;
-      try {
-        errorData = await res.json();
-      } catch (parseError) {
-        errorData = { error: `HTTP ${res.status}: ${res.statusText}` };
-      }
-      
       if (!res.ok) {
-        console.error('Request failed:', {
-          status: res.status,
-          statusText: res.statusText,
-          errorData,
-          sentPayload: payload,
-          url: `/api/workspaces/${workspaceId}/files`
-        });
-        
-        throw new Error(errorData.error || `Failed to add files (${res.status}: ${res.statusText})`);
+        await handleApiError(res, `Failed to add files (${res.status}: ${res.statusText})`);
       }
             
       showAlert('success', 'Files added to workspace successfully');
-      // Refresh the workspace files list
       await fetchWorkspaceFiles();
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      console.error('Full error details:', err);
-      setError(errorMessage);
-      showAlert('error', `Failed to add files to workspace: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to add files to workspace: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to add files to workspace: ${errorMessage}`);
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -94,18 +93,29 @@ export const useWorkspaceFiles = (workspaceId: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const res = await fetch(`/api/workspaces/${workspaceId}/files/${fileId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to remove file from workspace');
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to remove file from workspace');
+      }
+      
       showAlert('success', 'File removed from workspace successfully');
       
-      // Update the local state
       setWorkspaceFiles(prev => prev.filter(file => file.id !== fileId));
       
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to remove file from workspace: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to remove file from workspace: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to remove file from workspace: ${errorMessage}`);
+      }
       return false;
     } finally {
       setIsLoading(false);

@@ -5,7 +5,6 @@ import { UserForm } from './UserForm';
 import { Modal } from '@/components/common/Modal';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { useUsers } from '@/hooks/useUsers';
-import { UserBadge } from './UserBadge';
 
 interface UserTableProps {
   users: User[];
@@ -21,6 +20,8 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const { createUser, updateUser, deleteUser } = useUsers();
 
@@ -45,6 +46,19 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
     return 0;
   });
 
+  // Filter users based on search term
+  const filteredUsers = sortedUsers.filter(user => {
+    if (!searchTerm.trim()) return true;
+    
+    const search = searchTerm.toLowerCase();
+    return (
+      (user.name || '').toLowerCase().includes(search) ||
+      (user.email || '').toLowerCase().includes(search) ||
+      (user.username || '').toLowerCase().includes(search) ||
+      String(user.id || '').toLowerCase().includes(search)
+    );
+  });
+
   const handleAddUser = async (userData: User) => {
     // For new users, we need to convert to Omit<User, 'id'>
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -67,6 +81,18 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
     if (result) {
       setEditingUser(null);
       onUserChange(); // Refresh the user list
+    }
+  };
+
+  const handleRoleChange = async (userId: string, isAdmin: boolean) => {
+    setUpdatingUserId(userId);
+    try {
+      const result = await updateUser(userId, { isAdmin });
+      if (result) {
+        onUserChange(); // Refresh the user list
+      }
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -96,6 +122,38 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
         >
           Add User
         </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search users..."
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          />
+          <svg
+            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+        {searchTerm && (
+          <p className="mt-2 text-sm text-gray-600">
+            Showing {filteredUsers.length} of {users.length} users
+          </p>
+        )}
       </div>
 
       <div className="overflow-x-auto">
@@ -146,10 +204,8 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
                   </span>
                 )}
               </th>
-              <th 
-                className="py-3 px-6 text-center"
-              >
-                Admin
+              <th className="py-3 px-6 text-center">
+                Role
               </th>
               <th className="py-3 px-6 text-right">
                 Actions
@@ -163,7 +219,7 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
                 <SkeletonLoader type="table-row" count={5} />
               </>
             ) : sortedUsers.length > 0 ? (
-              sortedUsers.map((user) => (
+              filteredUsers.map((user) => (
                 <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/users/${user.id}`)}>
                   <td className="py-3 px-6 text-left whitespace-nowrap">
                     {user.id}
@@ -177,8 +233,16 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
                   <td className="py-3 px-6 text-left">
                     {user.email}
                   </td>
-                  <td className="py-3 px-6 text-center">
-                    <UserBadge isAdmin={user.isAdmin} />
+                  <td className="py-3 px-6 text-center" onClick={(e) => e.stopPropagation()}>
+                    <select
+                      value={user.isAdmin ? 'admin' : 'user'}
+                      onChange={(e) => handleRoleChange(user.id!, e.target.value === 'admin')}
+                      disabled={updatingUserId === user.id}
+                      className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
                   </td>
                   <td className="py-3 px-6 text-right">
                     <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
@@ -201,7 +265,7 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
             ) : (
               <tr>
                 <td colSpan={6} className="py-6 text-center text-gray-500">
-                  No users found
+                  {searchTerm ? `No users found matching "${searchTerm}"` : 'No users found'}
                 </td>
               </tr>
             )}

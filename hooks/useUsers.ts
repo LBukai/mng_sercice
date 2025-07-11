@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { User } from '@/types/user';
 import { getUsers, createUser as createUserApi, updateUser as updateUserApi, deleteUser as deleteUserApi, getUserById as getUserByIdApi } from '@/services/userApi';
 import { useAlert } from '@/contexts/AlertContext';
+import { handleApiError, ApiError } from '@/utils/apiErrorHandler';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -17,9 +18,16 @@ export const useUsers = () => {
       setUsers(data);
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to fetch users: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to fetch users: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to fetch users: ${errorMessage}`);
+      }
       return [];
     } finally {
       setIsLoading(false);
@@ -33,9 +41,16 @@ export const useUsers = () => {
       const data = await getUserByIdApi(id);
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to fetch user: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to fetch user: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to fetch user: ${errorMessage}`);
+      }
       return null;
     } finally {
       setIsLoading(false);
@@ -47,16 +62,21 @@ export const useUsers = () => {
       setIsLoading(true);
       setError(null);
       
-      // Log the data being sent for debugging
-      
       const newUser = await createUserApi(userData);
       setUsers(prev => [...prev, newUser]);
       showAlert('success', 'User created successfully');
       return newUser;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to create user: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to create user: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to create user: ${errorMessage}`);
+      }
       return null;
     } finally {
       setIsLoading(false);
@@ -71,13 +91,16 @@ export const useUsers = () => {
       const createdUsers: User[] = [];
       let successCount = 0;
       
-      // Create users one by one (you can optimize this with a bulk API endpoint if available)
       for (const userData of usersData) {
         try {
           const newUser = await createUserApi(userData);
           createdUsers.push(newUser);
           successCount++;
         } catch (err) {
+          if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+            // Re-throw auth errors to trigger sign-out
+            throw err;
+          }
           const errorMessage = err instanceof Error ? err.message : 'Unknown error';
           showAlert('error', `Failed to create user ${userData.name}: ${errorMessage}`);
         }
@@ -98,9 +121,16 @@ export const useUsers = () => {
         return false;
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to create users: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to create users: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to create users: ${errorMessage}`);
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -112,8 +142,6 @@ export const useUsers = () => {
       setIsLoading(true);
       setError(null);
       
-      
-      // Use direct API call instead of server action for client components
       const response = await fetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: {
@@ -122,11 +150,8 @@ export const useUsers = () => {
         body: JSON.stringify(userData),
       });
 
-
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Update failed:', errorData);
-        throw new Error(errorData.error || `Failed to update user: ${response.status} ${response.statusText}`);
+        await handleApiError(response, 'Failed to update user');
       }
 
       const updatedUser = await response.json();
@@ -137,10 +162,16 @@ export const useUsers = () => {
       showAlert('success', 'User updated successfully');
       return updatedUser;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      console.error('Error in updateUser:', err);
-      setError(errorMessage);
-      showAlert('error', `Failed to update user: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to update user: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to update user: ${errorMessage}`);
+      }
       return null;
     } finally {
       setIsLoading(false);
@@ -156,9 +187,16 @@ export const useUsers = () => {
       showAlert('success', 'User deleted successfully');
       return true;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      showAlert('error', `Failed to delete user: ${errorMessage}`);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to delete user: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to delete user: ${errorMessage}`);
+      }
       return false;
     } finally {
       setIsLoading(false);
