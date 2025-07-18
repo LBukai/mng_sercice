@@ -59,6 +59,23 @@ export async function updateUser(
   return response.json();
 }
 
+export async function updateUserAdminStatus(
+  id: string,
+  isAdmin: boolean
+): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/users/${id}/admin`, {
+    method: "PATCH",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({ isAdmin }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update user admin status: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export async function deleteUser(id: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: "DELETE",

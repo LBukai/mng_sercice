@@ -15,7 +15,6 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
     name: '',
     email: '',
     username: '',
-    password: '',
     isAdmin: false,
     ...user,
   });
@@ -24,7 +23,6 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
     name?: string;
     email?: string;
     username?: string;
-    password?: string;
   }>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -49,28 +47,19 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
       name?: string;
       email?: string;
       username?: string;
-      password?: string;
     } = {};
     
     if (!formData.name?.trim()) {
       newErrors.name = 'Name is required';
     }
     
-    if (!formData.email?.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    // Email is optional, but if provided must be valid
+    if (formData.email?.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email format is invalid';
     }
     
     if (!formData.username?.trim()) {
       newErrors.username = 'Username is required';
-    }
-    
-    // Only validate password on create, not edit
-    if (!isEditMode && !formData.password?.trim()) {
-      newErrors.password = 'Password is required';
-    } else if (!isEditMode && formData.password && formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
     }
     
     setErrors(newErrors);
@@ -81,20 +70,11 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Always pass a User object with id (either existing or empty string for new users)
       const submitData: User = {
         ...formData,
-        id: formData.id || '', // Ensure id is always present
+        id: formData.id || '',
       };
-      
-      // For editing, remove password if it's empty
-      if (isEditMode && !formData.password) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password, ...userDataWithoutPassword } = submitData;
-        onSubmit({ ...userDataWithoutPassword, id: submitData.id });
-      } else {
-        onSubmit(submitData);
-      }
+      onSubmit(submitData);
     }
   };
 
@@ -126,7 +106,7 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
         
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email Address
+            Email Address (Optional)
           </label>
           <input
             type="email"
@@ -159,25 +139,6 @@ export const UserForm = ({ user, onSubmit, onCancel }: UserFormProps) => {
           />
           {errors.username && (
             <p className="mt-1 text-sm text-red-600">{errors.username}</p>
-          )}
-        </div>
-        
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            {isEditMode ? 'Password (leave blank to keep current)' : 'Password'}
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password || ''}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.password ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
           )}
         </div>
         

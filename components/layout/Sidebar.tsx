@@ -1,8 +1,10 @@
+// components/layout/Sidebar.tsx
 'use client';
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAnythingLLM } from '@/hooks/useAnythingLLM';
 
 // Define navigation items with admin requirements
 const navigationItems = [
@@ -30,12 +32,6 @@ const navigationItems = [
     icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
     adminOnly: true 
   },
-  /*{ 
-    name: 'Settings', 
-    href: '/settings', 
-    icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
-    adminOnly: false 
-  },*/
   { 
     name: 'Help', 
     href: '/help', 
@@ -49,6 +45,7 @@ export const Sidebar = () => {
   const { data: session } = useSession();
   const user = session?.user;
   const isAdmin = user?.isAdmin || false;
+  const { redirectToAnythingLLM, isLoading: isAnythingLLMLoading } = useAnythingLLM();
 
   // Filter navigation items based on admin status
   const visibleNavigationItems = navigationItems.filter(item => {
@@ -58,49 +55,78 @@ export const Sidebar = () => {
     return true;
   });
 
+  const handleAnythingLLMClick = async () => {
+    await redirectToAnythingLLM();
+  };
+
   return (
     <div className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-64">
         <div className="flex flex-col h-0 flex-1 bg-gray-800">
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-4">
-              <span className="text-white text-2xl font-semibold">Management</span>
+              <img 
+                src="/edag.png" 
+                alt="EDAG" 
+                className="h-8 w-auto"
+              />
             </div>
-            <nav className="mt-5 flex-1 px-2 space-y-1">
-              {visibleNavigationItems.map((item) => {
-                const isActive = pathname === item.href;
-                
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                      isActive
-                        ? 'bg-gray-900 text-white'
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    }`}
-                  >
-                    <svg
-                      className={`mr-3 h-6 w-6 ${
-                        isActive ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300'
+            <nav className="mt-5 flex-1 px-2 space-y-1 flex flex-col">
+              <div className="space-y-1">
+                {visibleNavigationItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                        isActive
+                          ? 'bg-gray-900 text-white'
+                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                       }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      aria-hidden="true"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d={item.icon}
-                      />
-                    </svg>
-                    {item.name}
-                  </Link>
-                );
-              })}
+                      <svg
+                        className={`mr-3 h-6 w-6 ${
+                          isActive ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300'
+                        }`}
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d={item.icon}
+                        />
+                      </svg>
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </div>
+              
+              {/* Open EDAG AI Button*/}
+              <div className="mt-auto">
+                <button
+                  onClick={handleAnythingLLMClick}
+                  disabled={isAnythingLLMLoading}
+                  className="group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md bg-gray-700 text-gray-400 hover:bg-gray-900 hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <img
+                    src="edag-icon.svg"
+                    alt="Open EDAG AI"
+                    className="mr-3 h-6 w-6 filter grayscale opacity-60 group-hover:opacity-80"
+                    style={{
+                      filter: 'grayscale(1) brightness(0.8)'
+                    }}
+                  />
+                  {isAnythingLLMLoading ? 'Opening...' : 'Open EDAG AI'}
+                </button>
+              </div>
             </nav>
           </div>
           

@@ -23,7 +23,7 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
-  const { createUser, updateUser, deleteUser } = useUsers();
+  const { createUser, updateUser, updateUserAdminStatus, deleteUser } = useUsers();
 
   const handleSort = (field: keyof User) => {
     if (sortField === field) {
@@ -87,7 +87,7 @@ export const UserTable = ({ users, onUserChange, isLoading = false }: UserTableP
   const handleRoleChange = async (userId: string, isAdmin: boolean) => {
     setUpdatingUserId(userId);
     try {
-      const result = await updateUser(userId, { isAdmin });
+      const result = await updateUserAdminStatus(userId, isAdmin);
       if (result) {
         onUserChange(); // Refresh the user list
       }

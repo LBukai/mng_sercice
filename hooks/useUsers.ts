@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { User } from '@/types/user';
-import { getUsers, createUser as createUserApi, updateUser as updateUserApi, deleteUser as deleteUserApi, getUserById as getUserByIdApi } from '@/services/userApi';
+import { getUsers, createUser as createUserApi, updateUser as updateUserApi, updateUserAdminStatus as updateUserAdminStatusApi, deleteUser as deleteUserApi, getUserById as getUserByIdApi } from '@/services/userApi';
 import { useAlert } from '@/contexts/AlertContext';
 import { handleApiError, ApiError } from '@/utils/apiErrorHandler';
 
@@ -178,6 +178,35 @@ export const useUsers = () => {
     }
   }, [showAlert]);
 
+  const updateUserAdminStatus = useCallback(async (id: string, isAdmin: boolean) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const updatedUser = await updateUserAdminStatusApi(id, isAdmin);
+      
+      setUsers(prev => 
+        prev.map(user => user.id === id ? { ...user, isAdmin } : user)
+      );
+      showAlert('success', `User ${isAdmin ? 'promoted to' : 'demoted from'} admin successfully`);
+      return updatedUser;
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to update user admin status: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to update user admin status: ${errorMessage}`);
+      }
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showAlert]);
+
   const deleteUser = useCallback(async (id: string) => {
     try {
       setIsLoading(true);
@@ -212,6 +241,7 @@ export const useUsers = () => {
     createUser,
     createUsers,
     updateUser,
+    updateUserAdminStatus,
     deleteUser,
   };
 };

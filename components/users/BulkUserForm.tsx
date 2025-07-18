@@ -25,14 +25,14 @@ export const BulkUserForm = ({ onSubmit, onCancel, isLoading = false }: BulkUser
   const generateTemplate = () => {
     const template = [
       {
-        fullName: "John Doe",
-        email: "john.doe@company.com",
+        name: "John Doe",
+        email: "john.doe@company.com", // Optional
         username: "johndoe",
         isAdmin: false
       },
       {
-        fullName: "Jane Smith",
-        email: "jane.smith@company.com", 
+        name: "Jane Smith",
+        email: "", // Can be empty
         username: "janesmith",
         isAdmin: true
       }
@@ -154,9 +154,8 @@ export const BulkUserForm = ({ onSubmit, onCancel, isLoading = false }: BulkUser
         userErrors.fullName = 'Full name is required';
       }
       
-      if (!user.email.trim()) {
-        userErrors.email = 'Email is required';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+      // Email is optional, but if provided must be valid
+      if (user.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
         userErrors.email = 'Invalid email format';
       }
       
@@ -166,8 +165,8 @@ export const BulkUserForm = ({ onSubmit, onCancel, isLoading = false }: BulkUser
         userErrors.username = 'Username must be at least 3 characters';
       }
       
-      // Check for duplicate emails and usernames
-      const duplicateEmail = users.findIndex((u, i) => i !== index && u.email === user.email);
+      // Check for duplicate emails and usernames (only check non-empty emails)
+      const duplicateEmail = user.email.trim() ? users.findIndex((u, i) => i !== index && u.email === user.email) : -1;
       const duplicateUsername = users.findIndex((u, i) => i !== index && u.username === user.username);
       
       if (duplicateEmail !== -1) {
@@ -195,12 +194,11 @@ export const BulkUserForm = ({ onSubmit, onCancel, isLoading = false }: BulkUser
       return;
     }
 
-    // Transform the data to match the API requirements from OpenAPI spec
+    // Transform the data to match the API requirements
     const usersToCreate = users.map(user => ({
       name: user.fullName.trim(),
-      email: user.email.trim().toLowerCase(),
+      email: user.email.trim() || undefined, // Only include email if provided
       username: user.username.trim().toLowerCase(),
-      password: "DefaultPassword123!", // Default password as per OpenAPI spec
       isAdmin: user.isAdmin
     }));
 
@@ -242,15 +240,15 @@ export const BulkUserForm = ({ onSubmit, onCancel, isLoading = false }: BulkUser
           <h4 className="text-sm font-medium text-gray-900">Users to Create</h4>
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-96 overflow-y-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 sticky top-0">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Full Name
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email Address
+                  Email Address (Optional)
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Username
