@@ -1,4 +1,4 @@
-// components/layout/Sidebar.tsx
+// components/layout/Sidebar.tsx (Updated version)
 'use client';
 
 import { useSession } from 'next-auth/react';
@@ -30,6 +30,12 @@ const navigationItems = [
     name: 'Projects', 
     href: '/projects', 
     icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
+    adminOnly: true 
+  },
+  { 
+    name: 'Models', 
+    href: '/models', 
+    icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
     adminOnly: true 
   },
   { 

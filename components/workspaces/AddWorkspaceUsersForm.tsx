@@ -20,6 +20,7 @@ export const AddWorkspaceUsersForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch users assigned to the project that this workspace belongs to
   useEffect(() => {
@@ -87,6 +88,20 @@ export const AddWorkspaceUsersForm = ({
     fetchProjectUsers();
   }, [workspace, existingUsers]); // Include workspace in dependencies
 
+  // Filter users based on search term
+  const filteredUsers = projectUsers.filter(projectUser => {
+    if (!searchTerm.trim()) return true;
+    
+    const search = searchTerm.toLowerCase();
+    const user = projectUser.user;
+    return (
+      (user.name || '').toLowerCase().includes(search) ||
+      (user.email || '').toLowerCase().includes(search) ||
+      (user.username || '').toLowerCase().includes(search) ||
+      String(user.id || '').toLowerCase().includes(search)
+    );
+  });
+
   const handleUserToggle = (userId: string) => {
     setSelectedUsers(prev => {
       if (prev.includes(userId)) {
@@ -105,7 +120,13 @@ export const AddWorkspaceUsersForm = ({
       return;
     }
     
-    await onSubmit(selectedUsers);
+    const success = await onSubmit(selectedUsers);
+    if (success) {
+      // Reset form on success
+      setSelectedUsers([]);
+      setSearchTerm('');
+      setError(null);
+    }
   };
 
   return (
@@ -124,20 +145,54 @@ export const AddWorkspaceUsersForm = ({
             Select Users from Project
           </label>
           
+          {/* Search Bar */}
+          <div className="mb-3">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search users by name, email, or username..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+              <svg
+                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            {searchTerm && (
+              <p className="mt-1 text-sm text-gray-600">
+                Showing {filteredUsers.length} of {projectUsers.length} available users
+              </p>
+            )}
+          </div>
+          
           {isLoading ? (
             <div className="py-4 flex justify-center">
               <LoadingSpinner size="md" />
             </div>
-          ) : projectUsers.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="p-4 bg-gray-50 rounded-md text-gray-500 text-sm">
-              {workspace.project 
+              {searchTerm 
+                ? `No users found matching "${searchTerm}"`
+                : workspace.project 
                 ? "No available users from this project to add to the workspace."
                 : "This workspace is not associated with a project."
               }
             </div>
           ) : (
             <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md p-2">
-              {projectUsers.map(projectUser => (
+              {filteredUsers.map(projectUser => (
                 <div key={projectUser.user.id} className="flex items-center py-2 px-3 hover:bg-gray-50 rounded-md">
                   <input
                     type="checkbox"
@@ -149,7 +204,8 @@ export const AddWorkspaceUsersForm = ({
                   <label htmlFor={`user-${projectUser.user.id}`} className="ml-3 block text-sm text-gray-700 cursor-pointer">
                     <div className="font-medium">{projectUser.user.name}</div>
                     <div className="text-gray-500 text-xs">
-                      {projectUser.user.email} • {projectUser.user.username}
+                      {projectUser.user.email && `${projectUser.user.email} • `}
+                      {projectUser.user.username}
                       <span className="ml-2 text-blue-600">
                         ({typeof projectUser.role === 'string' ? projectUser.role : projectUser.role.role})
                       </span>
@@ -174,7 +230,7 @@ export const AddWorkspaceUsersForm = ({
             disabled={selectedUsers.length === 0 || isLoading}
             className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add Selected Users
+            Add Selected Users ({selectedUsers.length})
           </button>
         </div>
       </form>

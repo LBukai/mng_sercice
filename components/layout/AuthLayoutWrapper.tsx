@@ -1,4 +1,3 @@
-// components/layout/AuthLayoutWrapper.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -29,6 +28,7 @@ export const AuthLayoutWrapper = ({ children }: AuthLayoutWrapperProps) => {
     '/', // Dashboard
     '/users', // User management
     '/projects', // Project listing (not individual project pages)
+    '/models', // Model and provider management
   ];
   
   // Check if current path is an admin-only route

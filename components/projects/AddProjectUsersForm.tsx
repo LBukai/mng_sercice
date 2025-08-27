@@ -21,6 +21,7 @@ export const AddProjectUsersForm = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<ProjectRole>('User');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch all users
   useEffect(() => {
@@ -43,6 +44,19 @@ export const AddProjectUsersForm = ({
 
     fetchUsers();
   }, [existingUsers]);
+
+  // Filter users based on search term
+  const filteredUsers = allUsers.filter(user => {
+    if (!searchTerm.trim()) return true;
+    
+    const search = searchTerm.toLowerCase();
+    return (
+      (user.name || '').toLowerCase().includes(search) ||
+      (user.email || '').toLowerCase().includes(search) ||
+      (user.username || '').toLowerCase().includes(search) ||
+      String(user.id || '').toLowerCase().includes(search)
+    );
+  });
 
   const handleUserToggle = (userId: string) => {
     setSelectedUsers(prev => {
@@ -77,6 +91,7 @@ export const AddProjectUsersForm = ({
       if (success) {
         // Reset form on success
         setSelectedUsers([]);
+        setSearchTerm('');
         setError(null);
       }
     } catch (err) {
@@ -117,17 +132,52 @@ export const AddProjectUsersForm = ({
             Select Users to Add
           </label>
           
+          {/* Search Bar */}
+          <div className="mb-3">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search users by name, email, or username..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+              <svg
+                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            {searchTerm && (
+              <p className="mt-1 text-sm text-gray-600">
+                Showing {filteredUsers.length} of {allUsers.length} available users
+              </p>
+            )}
+          </div>
+          
           {isLoading ? (
             <div className="py-4 flex justify-center">
               <LoadingSpinner size="md" />
             </div>
-          ) : allUsers.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="p-4 bg-gray-50 rounded-md text-gray-500 text-sm">
-              No available users to add to this project.
+              {searchTerm 
+                ? `No users found matching "${searchTerm}"`
+                : "No available users to add to this project."
+              }
             </div>
           ) : (
             <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md p-2">
-              {allUsers.map(user => (
+              {filteredUsers.map(user => (
                 <div key={user.id} className="flex items-center py-2 px-3 hover:bg-gray-50 rounded-md">
                   <input
                     type="checkbox"
@@ -138,7 +188,9 @@ export const AddProjectUsersForm = ({
                   />
                   <label htmlFor={`user-${user.id}`} className="ml-3 block text-sm text-gray-700 cursor-pointer">
                     <div className="font-medium">{user.name}</div>
-                    <div className="text-gray-500 text-xs">{user.email} • {user.username}</div>
+                    <div className="text-gray-500 text-xs">
+                      {user.email && `${user.email} • `}{user.username}
+                    </div>
                   </label>
                 </div>
               ))}
@@ -159,7 +211,7 @@ export const AddProjectUsersForm = ({
             disabled={selectedUsers.length === 0 || isLoading}
             className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add Selected Users
+            Add Selected Users ({selectedUsers.length})
           </button>
         </div>
       </form>

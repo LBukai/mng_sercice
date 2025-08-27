@@ -10,8 +10,8 @@ import { SessionHandler } from '@/components/auth/SessionHandler';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Management Service',
-  description: 'A management service for your application',
+  title: 'Open EDAG Management Service',
+  description: 'A management service for open edag management service',
 };
 
 export default function RootLayout({

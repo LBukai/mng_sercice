@@ -26,8 +26,8 @@ const faqs: FAQ[] = [
     answer: 'To add a new user, go to the Users page and click on the "Add Multiple User" button. Upload your structured json and press Add users. You can get the the template for the json by clicking Download JSON template'
   },
   {
-    question: 'How create',
-    answer: 'To add a new user, go to the Users page and click on the "Add Multiple User" button. Upload your structured json and press Add users. You can get the the template for the json by clicking Download JSON template'
+    question: 'How can I login to anythingLLM?',
+    answer: 'User can only access AnythingLLM from the management service. By clicking on anythingLLM in the sidebar you get authenticated and redirected into your anytingLLM profile.'
   },
   {
     question: 'How do I add a new Project?',
@@ -181,10 +181,10 @@ export default function HelpPage() {
               Our support team is here to help you with any questions or issues you might have.
             </p>
             <a
-              href="mailto:support@example.com"
+              href="mailto:dare@edag.com"
               className="text-sm font-medium text-blue-600 hover:text-blue-800"
             >
-              Email us at support@example.com
+              Email us at dare@edag.com
             </a>
           </div>
           
