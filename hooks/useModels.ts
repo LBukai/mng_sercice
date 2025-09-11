@@ -181,12 +181,15 @@ export const useModels = () => {
       setIsLoading(true);
       setError(null);
       
+      // Ensure ID is sent as integer
+      const id = typeof modelId === 'string' ? parseInt(modelId, 10) : modelId;
+      
       const response = await fetch('/api/models/default', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: modelId }),
+        body: JSON.stringify({ id }),
       });
 
       if (!response.ok) {

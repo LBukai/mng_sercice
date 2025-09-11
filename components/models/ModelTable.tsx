@@ -96,7 +96,9 @@ export const ModelTable = ({ models, defaultModelId, onModelChange, isLoading = 
   };
 
   const handleSetDefault = async (modelId: string | number) => {
-    const result = await updateDefaultModel(modelId);
+    // Convert to number if it's a string
+    const id = typeof modelId === 'string' ? parseInt(modelId, 10) : modelId;
+    const result = await updateDefaultModel(id);
     if (result) {
       onModelChange(); // Refresh to get updated default model
     }
@@ -201,7 +203,7 @@ export const ModelTable = ({ models, defaultModelId, onModelChange, isLoading = 
               </>
             ) : sortedModels.length > 0 ? (
               filteredModels.map((model) => {
-                const isDefault = String(model.id) === String(defaultModelId);
+                const isDefault = Number(model.id) === Number(defaultModelId);
                 return (
                   <tr key={model.id} className={`border-b border-gray-200 hover:bg-gray-50 ${isDefault ? 'bg-blue-50' : ''}`}>
                     <td className="py-3 px-6 text-left whitespace-nowrap">
@@ -321,7 +323,7 @@ export const ModelTable = ({ models, defaultModelId, onModelChange, isLoading = 
       >
         <div>
           <p className="text-sm text-gray-500 mb-4">
-            Are you sure you want to delete the model `&quot;`{modelToDelete?.name}`&quot;`? This action cannot be undone.
+            Are you sure you want to delete the model &quot;{modelToDelete?.name}&quot;? This action cannot be undone.
           </p>
           <div className="flex justify-end space-x-3">
             <button

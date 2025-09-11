@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Project } from '@/types/project';
 import { Workspace } from '@/types/workspace';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -10,6 +11,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useProjectUsers } from '@/hooks/useProjectUsers';
 import { useProjectWorkspaces } from '@/hooks/useProjectWorkspaces';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
+import { useProjectModels } from '@/hooks/useProjectModels';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { 
   WorkspaceLimitBadge, 
@@ -20,6 +22,7 @@ import {
 import { ProjectUsersTable } from '@/components/projects/ProjectUsersTable';
 import { ProjectWorkspacesTable } from '@/components/projects/ProjectWorkspacesTable';
 import { ProjectFilesTable } from '@/components/projects/ProjectFilesTable';
+import { ProjectModelsTable } from '@/components/projects/ProjectModelsTable';
 import { Modal } from '@/components/common/Modal';
 import { AddProjectUsersForm } from '@/components/projects/AddProjectUsersForm';
 import Link from 'next/link';
@@ -27,10 +30,13 @@ import Link from 'next/link';
 export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session } = useSession();
   const projectId = params.id as string;
   
   const [project, setProject] = useState<Project | null>(null);
   const [showAddUsersModal, setShowAddUsersModal] = useState(false);
+  
+  const isAdmin = session?.user?.isAdmin || false;
   
   // Hooks for data management
   const { isLoading: projectLoading, error: projectError, getProjectById, deleteProject } = useProjects();
@@ -63,6 +69,14 @@ export default function ProjectDetailsPage() {
     removeFileFromProject
   } = useProjectFiles(projectId);
 
+  const {
+    projectModels,
+    isLoading: modelsLoading,
+    error: modelsError,
+    fetchProjectModels,
+    updateProjectModels
+  } = useProjectModels(projectId);
+
   useEffect(() => {
     const fetchData = async () => {
       if (projectId) {
@@ -75,13 +89,14 @@ export default function ProjectDetailsPage() {
         await Promise.all([
           fetchProjectUsers(),
           fetchProjectWorkspaces(),
-          fetchProjectFiles()
+          fetchProjectFiles(),
+          fetchProjectModels()
         ]);
       }
     };
 
     fetchData();
-  }, [projectId, getProjectById, fetchProjectUsers, fetchProjectWorkspaces, fetchProjectFiles]);
+  }, [projectId, getProjectById, fetchProjectUsers, fetchProjectWorkspaces, fetchProjectFiles, fetchProjectModels]);
 
   const handleDelete = async () => {
     if (!project?.id) return;
@@ -96,6 +111,10 @@ export default function ProjectDetailsPage() {
 
   const handleAddWorkspace = async (workspaceData: Omit<Workspace, 'id'>) => {
     return await addWorkspacesToProject([workspaceData]);
+  };
+
+  const handleUpdateProjectModels = async (modelIds: number[]) => {
+    return await updateProjectModels(modelIds);
   };
 
   return (
@@ -129,20 +148,22 @@ export default function ProjectDetailsPage() {
                 <h3 className="text-lg leading-6 font-medium text-gray-900">Project Information</h3>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">Details and configuration of the project.</p>
               </div>
-              <div className="flex space-x-2">
-                <Link
-                  href={`/projects/edit/${project.id}`}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Edit
-                </Link>
-                <button
-                  onClick={handleDelete}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  Delete
-                </button>
-              </div>
+              {isAdmin && (
+                <div className="flex space-x-2">
+                  <Link
+                    href={`/projects/edit/${project.id}`}
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Edit
+                  </Link>
+                  <button
+                    onClick={handleDelete}
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
             <div className="border-t border-gray-200">
               <dl>
@@ -197,6 +218,19 @@ export default function ProjectDetailsPage() {
               </dl>
             </div>
           </div>
+
+          {/* Project Models Table - Only show for admins */}
+          {isAdmin && (
+            <div className="mb-6">
+              <ProjectModelsTable
+                projectModels={projectModels}
+                isLoading={modelsLoading}
+                error={modelsError}
+                onUpdateModels={handleUpdateProjectModels}
+                isAdmin={isAdmin}
+              />
+            </div>
+          )}
 
           {/* Project Users Table */}
           <div className="mb-6">

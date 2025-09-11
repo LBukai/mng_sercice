@@ -70,7 +70,7 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
       newErrors.provider_id = 'Provider is required';
     }
     
-    setErrors(newErrors);
+    //setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -78,11 +78,21 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit({
-        ...formData,
+      // Only send name and provider_id, convert provider_id to number
+      const payload = {
         name: formData.name.trim(),
-        provider_id: formData.provider_id,
-      });
+        provider_id: parseInt(String(formData.provider_id), 10),
+      };
+      
+      // If editing, include the id and other existing fields
+      if (isEditMode && model?.id) {
+        onSubmit({
+          ...model,
+          ...payload,
+        });
+      } else {
+        onSubmit(payload);
+      }
     }
   };
 
