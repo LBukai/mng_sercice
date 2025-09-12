@@ -36,6 +36,32 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    
+    const response = await fetch(`${API_BASE_URL}/workspaces/${id}`, {
+      method: "PATCH",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update workspace: ${response.statusText}`);
+    }
+
+    const updatedWorkspace = await response.json();
+    return NextResponse.json(updatedWorkspace);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> }

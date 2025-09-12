@@ -3,4 +3,10 @@ export interface Workspace {
   name: string;
   slug?: string;
   project?: string;
+  prompt?: string;
+  temperature?: number;
+  model?: {
+    id: number;
+    name: string;
+  };
 }

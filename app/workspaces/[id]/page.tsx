@@ -7,16 +7,22 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { WorkspaceUsersTable } from '@/components/workspaces/WorkspaceUsersTable';
 import { WorkspaceFilesTable } from '@/components/workspaces/WorkspaceFilesTable';
+import { WorkspaceSettingsForm } from '@/components/workspaces/WorkspaceSettingsForm';
 import { useWorkspaceUsers } from '@/hooks/useWorkspaceUsers';
 import { useWorkspaceFiles } from '@/hooks/useWorkspaceFiles';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
+import { useAlert } from '@/contexts/AlertContext';
+import { Modal } from '@/components/common/Modal';
 import Link from 'next/link';
 
 export default function WorkspaceDetailsPage() {
   const params = useParams();
   const workspaceId = params.id as string;
+  const { showAlert } = useAlert();
   
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   
   // Hooks for data management
   const { isLoading: workspaceLoading, error: workspaceError, getWorkspaceById } = useWorkspaces();
@@ -57,6 +63,38 @@ export default function WorkspaceDetailsPage() {
     fetchData();
   }, [workspaceId, getWorkspaceById, fetchWorkspaceUsers, fetchWorkspaceFiles]);
 
+  const handleUpdateSettings = async (updatedWorkspace: Workspace) => {
+    setIsUpdatingSettings(true);
+    try {
+      const response = await fetch(`/api/workspaces/${workspaceId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: updatedWorkspace.prompt,
+          temperature: updatedWorkspace.temperature,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update workspace settings: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      setWorkspace(result);
+      setShowSettingsModal(false);
+      showAlert('success', 'Workspace settings updated successfully');
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      showAlert('error', `Failed to update settings: ${errorMessage}`);
+      return false;
+    } finally {
+      setIsUpdatingSettings(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <PageHeader 
@@ -88,6 +126,12 @@ export default function WorkspaceDetailsPage() {
                 <h3 className="text-lg leading-6 font-medium text-gray-900">Workspace Information</h3>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">Details and configuration of the workspace.</p>
               </div>
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Edit Settings
+              </button>
             </div>
             <div className="border-t border-gray-200">
               <dl>
@@ -119,6 +163,26 @@ export default function WorkspaceDetailsPage() {
                   </div>
                 )}
                 <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Temperature</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      {workspace.temperature ?? 0.7}
+                    </span>
+                  </dd>
+                </div>
+                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">System Prompt</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    {workspace.prompt ? (
+                      <div className="bg-gray-50 rounded-md p-3 text-sm">
+                        {workspace.prompt}
+                      </div>
+                    ) : (
+                      <span className="text-gray-500 italic">No system prompt configured</span>
+                    )}
+                  </dd>
+                </div>
+                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Status</dt>
                   <dd className="mt-1 sm:mt-0 sm:col-span-2">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -141,6 +205,7 @@ export default function WorkspaceDetailsPage() {
               onAddUsers={addUsersToWorkspace}
             />
           </div>
+          
           {/* Workspace Files Table */}
           <div className="mb-6">
             <WorkspaceFilesTable
@@ -152,6 +217,21 @@ export default function WorkspaceDetailsPage() {
               onAddFiles={addFilesToWorkspace}
             />
           </div>
+
+          {/* Settings Modal */}
+          <Modal 
+            isOpen={showSettingsModal} 
+            onClose={() => setShowSettingsModal(false)}
+            title="Workspace Settings"
+            size="md"
+          >
+            <WorkspaceSettingsForm 
+              workspace={workspace}
+              onUpdate={handleUpdateSettings}
+              onCancel={() => setShowSettingsModal(false)}
+              isLoading={isUpdatingSettings}
+            />
+          </Modal>
         </>
       ) : (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative">
