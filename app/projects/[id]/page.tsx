@@ -6,12 +6,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Project } from '@/types/project';
 import { Workspace } from '@/types/workspace';
+import { ArchGPTWorkspaceRequest } from '@/types/archgpt';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useProjects } from '@/hooks/useProjects';
 import { useProjectUsers } from '@/hooks/useProjectUsers';
 import { useProjectWorkspaces } from '@/hooks/useProjectWorkspaces';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useProjectModels } from '@/hooks/useProjectModels';
+import { useArchGPT } from '@/hooks/useArchGPT';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { 
   WorkspaceLimitBadge, 
@@ -77,6 +79,8 @@ export default function ProjectDetailsPage() {
     updateProjectModels
   } = useProjectModels(projectId);
 
+  const { createArchGPTWorkspace } = useArchGPT();
+
   useEffect(() => {
     const fetchData = async () => {
       if (projectId) {
@@ -111,6 +115,15 @@ export default function ProjectDetailsPage() {
 
   const handleAddWorkspace = async (workspaceData: Omit<Workspace, 'id'>) => {
     return await addWorkspacesToProject([workspaceData]);
+  };
+
+  const handleAddArchGPTWorkspace = async (workspaceData: ArchGPTWorkspaceRequest) => {
+    const success = await createArchGPTWorkspace(projectId, workspaceData);
+    if (success) {
+      // Refresh workspaces list
+      await fetchProjectWorkspaces();
+    }
+    return success;
   };
 
   const handleUpdateProjectModels = async (modelIds: number[]) => {
@@ -248,9 +261,11 @@ export default function ProjectDetailsPage() {
           <div className="mb-6">
             <ProjectWorkspacesTable
               projectWorkspaces={projectWorkspaces}
+              projectModels={projectModels}
               isLoading={workspacesLoading}
               error={workspacesError}
               onAddWorkspace={handleAddWorkspace}
+              onAddArchGPTWorkspace={handleAddArchGPTWorkspace}
               onRemoveWorkspace={removeWorkspaceFromProject}
             />
           </div>
@@ -275,14 +290,17 @@ export default function ProjectDetailsPage() {
             size="md"
           >
             <AddProjectUsersForm 
-                  onSubmit={async (usersData) => {
-                    const success = await addUsersToProject(usersData);
-                    if (success) {
-                      setShowAddUsersModal(false);
-                    }
-                    return success;
-                  } }
-                  onCancel={() => setShowAddUsersModal(false)} projectId={''} existingUsers={[]}            />
+              onSubmit={async (usersData) => {
+                const success = await addUsersToProject(usersData);
+                if (success) {
+                  setShowAddUsersModal(false);
+                }
+                return success;
+              }}
+              onCancel={() => setShowAddUsersModal(false)} 
+              projectId={projectId} 
+              existingUsers={projectUsers.map(pu => pu.user.id as string)}            
+            />
           </Modal>
         </>
       ) : (

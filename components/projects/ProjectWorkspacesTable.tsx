@@ -1,22 +1,29 @@
+// components/projects/ProjectWorkspacesTable.tsx
 import { useState } from 'react';
 import { Workspace } from '@/types/workspace';
+import { ArchGPTWorkspaceRequest } from '@/types/archgpt';
+import { Model } from '@/types/model';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { Modal } from '@/components/common/Modal';
 import { WorkspaceForm } from './WorkspaceForm';
 
 interface ProjectWorkspacesTableProps {
   projectWorkspaces: Workspace[];
+  projectModels: Model[];
   isLoading: boolean;
   error: string | null;
   onAddWorkspace: (workspaceData: Omit<Workspace, 'id'>) => Promise<boolean>;
-  onRemoveWorkspace?: (workspaceId: string) => Promise<boolean>; // Make it optional for backward compatibility
+  onAddArchGPTWorkspace: (workspaceData: ArchGPTWorkspaceRequest) => Promise<boolean>;
+  onRemoveWorkspace?: (workspaceId: string) => Promise<boolean>;
 }
 
 export const ProjectWorkspacesTable = ({
   projectWorkspaces,
+  projectModels,
   isLoading,
   error,
   onAddWorkspace,
+  onAddArchGPTWorkspace,
   onRemoveWorkspace
 }: ProjectWorkspacesTableProps) => {
   const [showAddWorkspaceModal, setShowAddWorkspaceModal] = useState(false);
@@ -30,6 +37,19 @@ export const ProjectWorkspacesTable = ({
     setIsCreating(true);
     try {
       const success = await onAddWorkspace(workspaceData);
+      if (success) {
+        setShowAddWorkspaceModal(false);
+      }
+      return success;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleCreateArchGPTWorkspace = async (workspaceData: ArchGPTWorkspaceRequest) => {
+    setIsCreating(true);
+    try {
+      const success = await onAddArchGPTWorkspace(workspaceData);
       if (success) {
         setShowAddWorkspaceModal(false);
       }
@@ -80,6 +100,9 @@ export const ProjectWorkspacesTable = ({
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -113,6 +136,11 @@ export const ProjectWorkspacesTable = ({
                         </div>
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Standard
+                      </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <a 
                         href={`/workspaces/${workspace.id}`}
@@ -133,7 +161,7 @@ export const ProjectWorkspacesTable = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={2} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
                     No workspaces assigned to this project
                   </td>
                 </tr>
@@ -148,10 +176,12 @@ export const ProjectWorkspacesTable = ({
         isOpen={showAddWorkspaceModal} 
         onClose={() => setShowAddWorkspaceModal(false)}
         title="Create New Workspace"
-        size="md"
+        size="lg"
       >
         <WorkspaceForm 
+          projectModels={projectModels}
           onSubmit={handleCreateWorkspace}
+          onSubmitArchGPT={handleCreateArchGPTWorkspace}
           onCancel={() => setShowAddWorkspaceModal(false)}
           isLoading={isCreating}
         />
