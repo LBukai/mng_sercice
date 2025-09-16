@@ -30,12 +30,15 @@ export async function getModels(): Promise<Model[]> {
 }
 
 export async function createModel(modelData: Omit<Model, "id">): Promise<Model> {
-  // Ensure provider_id is sent as integer
+  // Extract provider_id from provider object if it exists
   const requestData = {
     name: modelData.name,
-    provider_id: typeof modelData.provider_id === 'string' 
-      ? parseInt(modelData.provider_id, 10) 
-      : modelData.provider_id
+    provider_id: modelData.provider?.id 
+      ? (typeof modelData.provider.id === 'string' 
+          ? parseInt(modelData.provider.id, 10) 
+          : modelData.provider.id)
+      : undefined,
+    public: modelData.public
   };
 
   const response = await fetch(`${API_BASE_URL}/models`, {
@@ -57,12 +60,16 @@ export async function updateModel(
   id: string,
   modelData: Partial<Model>
 ): Promise<Model> {
-  // Ensure provider_id is sent as integer if provided
-  const requestData = { ...modelData };
-  if (requestData.provider_id !== undefined) {
-    requestData.provider_id = typeof requestData.provider_id === 'string' 
-      ? parseInt(requestData.provider_id, 10) 
-      : requestData.provider_id;
+  // Extract provider_id from provider object if it exists
+  const requestData: any = { 
+    name: modelData.name,
+    public: modelData.public
+  };
+  
+  if (modelData.provider?.id !== undefined) {
+    requestData.provider_id = typeof modelData.provider.id === 'string' 
+      ? parseInt(modelData.provider.id, 10) 
+      : modelData.provider.id;
   }
 
   const response = await fetch(`${API_BASE_URL}/models/${id}`, {

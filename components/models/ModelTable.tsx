@@ -52,7 +52,7 @@ export const ModelTable = ({ models, defaultModelId, onModelChange, isLoading = 
     const search = searchTerm.toLowerCase();
     return (
       (model.name || '').toLowerCase().includes(search) ||
-      (model.provider || '').toLowerCase().includes(search) ||
+      (model.provider?.name || '').toLowerCase().includes(search) ||
       String(model.id || '').toLowerCase().includes(search)
     );
   });
@@ -232,7 +232,7 @@ export const ModelTable = ({ models, defaultModelId, onModelChange, isLoading = 
                     </td>
                     <td className="py-3 px-6 text-left">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {model.provider}
+                        {model.provider?.name || 'Unknown'}
                       </span>
                     </td>
                     <td className="py-3 px-6 text-center">

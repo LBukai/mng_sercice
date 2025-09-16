@@ -1,6 +1,7 @@
 // components/models/ModelForm.tsx
 import { useState, useEffect } from 'react';
 import { Model } from '@/types/model';
+import { Provider } from '@/types/provider';
 import { useProviders } from '@/hooks/useProviders';
 
 interface ModelFormProps {
@@ -13,16 +14,21 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
   const isEditMode = !!model?.id;
   const { providers, fetchProviders } = useProviders();
   
-  const [formData, setFormData] = useState<Model>({
-    name: '',
-    provider_id: '',
-    //public: false,
-    ...model,
+  const [formData, setFormData] = useState<{
+    name: string;
+    provider?: Provider;
+    selectedProviderId: string;
+    public?: boolean;
+  }>({
+    name: model?.name || '',
+    provider: model?.provider,
+    selectedProviderId: model?.provider?.id ? String(model.provider.id) : '',
+    public: model?.public || false,
   });
 
   const [errors, setErrors] = useState<{
     name?: string;
-    provider_id?: number;
+    provider?: string;
   }>({});
 
   useEffect(() => {
@@ -37,6 +43,13 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
       setFormData((prev) => ({
         ...prev,
         [name]: target.checked,
+      }));
+    } else if (name === 'selectedProviderId') {
+      const selectedProvider = providers.find(p => String(p.id) === value);
+      setFormData((prev) => ({
+        ...prev,
+        selectedProviderId: value,
+        provider: selectedProvider,
       }));
     } else {
       setFormData((prev) => ({
@@ -57,7 +70,7 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
   const validateForm = () => {
     const newErrors: {
       name?: string;
-      provider_id?: string;
+      provider?: string;
     } = {};
     
     if (!formData.name?.trim()) {
@@ -66,11 +79,11 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
       newErrors.name = 'Model name must be at least 2 characters';
     }
 
-    if (!formData.provider_id) {
-      newErrors.provider_id = 'Provider is required';
+    if (!formData.selectedProviderId) {
+      newErrors.provider = 'Provider is required';
     }
     
-    //setErrors(newErrors);
+    setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -78,10 +91,10 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Only send name and provider_id, convert provider_id to number
       const payload = {
         name: formData.name.trim(),
-        provider_id: parseInt(String(formData.provider_id), 10),
+        provider: formData.provider,
+        public: formData.public,
       };
       
       // If editing, include the id and other existing fields
@@ -124,16 +137,16 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
         </div>
 
         <div>
-          <label htmlFor="provider_id" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="selectedProviderId" className="block text-sm font-medium text-gray-700 mb-1">
             Provider <span className="text-red-500">*</span>
           </label>
           <select
-            id="provider_id"
-            name="provider_id"
-            value={formData.provider_id || ''}
+            id="selectedProviderId"
+            name="selectedProviderId"
+            value={formData.selectedProviderId || ''}
             onChange={handleChange}
             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.provider_id ? 'border-red-500' : 'border-gray-300'
+              errors.provider ? 'border-red-500' : 'border-gray-300'
             }`}
           >
             <option value="">Select a provider...</option>
@@ -143,8 +156,8 @@ export const ModelForm = ({ model, onSubmit, onCancel }: ModelFormProps) => {
               </option>
             ))}
           </select>
-          {errors.provider_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.provider_id}</p>
+          {errors.provider && (
+            <p className="mt-1 text-sm text-red-600">{errors.provider}</p>
           )}
         </div>
 

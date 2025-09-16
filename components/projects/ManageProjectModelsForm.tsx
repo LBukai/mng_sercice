@@ -60,7 +60,7 @@ export const ManageProjectModelsForm = ({
     const search = searchTerm.toLowerCase();
     return (
       (model.name || '').toLowerCase().includes(search) ||
-      (model.provider || '').toLowerCase().includes(search) ||
+      (model.provider?.name || '').toLowerCase().includes(search) ||
       String(model.id || '').toLowerCase().includes(search)
     );
   });
@@ -163,7 +163,7 @@ export const ManageProjectModelsForm = ({
                       </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                          {model.provider}
+                          {model.provider?.name || 'Unknown'}
                         </span>
                       </td>
                       <td className="px-4 py-3">

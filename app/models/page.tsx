@@ -83,7 +83,7 @@ export default function ModelsPage() {
               </h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>
-                  <strong>{defaultModel.name}</strong> ({defaultModel.provider}) is currently set as the default model for the system.
+                  <strong>{defaultModel.name}</strong> ({defaultModel.provider?.name || 'Unknown Provider'}) is currently set as the default model for the system.
                 </p>
               </div>
             </div>

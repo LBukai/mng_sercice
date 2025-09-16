@@ -5,4 +5,5 @@ export interface Project {
     usercountLimit?: number;
     costCenter?: string;
     projectNumber?: string;
-  }
+    is_archgpt?: boolean;
+}

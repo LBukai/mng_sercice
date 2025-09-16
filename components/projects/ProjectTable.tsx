@@ -12,6 +12,16 @@ interface ProjectTableProps {
   isLoading?: boolean;
 }
 
+// ArchGPT Badge Component
+const ArchGPTBadge = () => (
+  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+    ArchGPT
+  </span>
+);
+
 export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: ProjectTableProps) => {
   const router = useRouter();
   const [sortField, setSortField] = useState<keyof Project>('name');
@@ -54,7 +64,8 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
       (project.name || '').toLowerCase().includes(search) ||
       String(project.id || '').toLowerCase().includes(search) ||
       (project.costCenter || '').toLowerCase().includes(search) ||
-      (project.projectNumber || '').toLowerCase().includes(search)
+      (project.projectNumber || '').toLowerCase().includes(search) ||
+      (project.is_archgpt && 'archgpt'.includes(search))
     );
   });
 
@@ -166,6 +177,9 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
                   </span>
                 )}
               </th>
+              <th className="py-3 px-6 text-left">
+                Type
+              </th>
               <th 
                 className="py-3 px-6 text-left cursor-pointer"
                 onClick={() => handleSort('costCenter')}
@@ -201,12 +215,35 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
               </>
             ) : sortedProjects.length > 0 ? (
               filteredProjects.map((project) => (
-                <tr key={project.id} className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/projects/${project.id}`)}>
+                <tr 
+                  key={project.id} 
+                  className={`border-b border-gray-200 hover:bg-gray-50 cursor-pointer ${
+                    project.is_archgpt ? 'bg-gradient-to-r from-white to-purple-50' : ''
+                  }`}
+                  onClick={() => router.push(`/projects/${project.id}`)}
+                >
                   <td className="py-3 px-6 text-left whitespace-nowrap">
                     {project.id}
                   </td>
                   <td className="py-3 px-6 text-left">
-                    {project.name}
+                    <div className="flex items-center gap-2">
+                      {project.name}
+                      {project.is_archgpt && <ArchGPTBadge />}
+                    </div>
+                  </td>
+                  <td className="py-3 px-6 text-left">
+                    {project.is_archgpt ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        ArchGPT
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                        Standard
+                      </span>
+                    )}
                   </td>
                   <td className="py-3 px-6 text-left">
                     {project.costCenter || '-'}
@@ -234,7 +271,7 @@ export const ProjectTable = ({ projects, onProjectChange, isLoading = false }: P
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="py-6 text-center text-gray-500">
+                <td colSpan={6} className="py-6 text-center text-gray-500">
                   {searchTerm ? `No projects found matching "${searchTerm}"` : 'No projects found'}
                 </td>
               </tr>

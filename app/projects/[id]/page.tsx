@@ -29,6 +29,16 @@ import { Modal } from '@/components/common/Modal';
 import { AddProjectUsersForm } from '@/components/projects/AddProjectUsersForm';
 import Link from 'next/link';
 
+// ArchGPT Badge Component
+const ArchGPTBadge = () => (
+  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+    ArchGPT
+  </span>
+);
+
 export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -158,8 +168,14 @@ export default function ProjectDetailsPage() {
           <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
             <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
               <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Project Information</h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">Details and configuration of the project.</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Project Information</h3>
+                  {project.is_archgpt && <ArchGPTBadge />}
+                </div>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                  Details and configuration of the project.
+                  {project.is_archgpt && ' This is an ArchGPT-enabled project with enhanced AI capabilities.'}
+                </p>
               </div>
               {isAdmin && (
                 <div className="flex space-x-2">
@@ -186,8 +202,26 @@ export default function ProjectDetailsPage() {
                 </div>
                 <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Project Name</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{project.name}</dd>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    <div className="flex items-center gap-2">
+                      {project.name}
+                      {project.is_archgpt && <ArchGPTBadge />}
+                    </div>
+                  </dd>
                 </div>
+                {project.is_archgpt && (
+                  <div className="bg-purple-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm font-medium text-purple-700">ArchGPT Status</dt>
+                    <dd className="mt-1 text-sm text-purple-900 sm:mt-0 sm:col-span-2">
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Enabled - This project has access to advanced ArchGPT features and specialized AI workflows.
+                      </div>
+                    </dd>
+                  </div>
+                )}
                 {project.workspacecountLimit && (
                   <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt className="text-sm font-medium text-gray-500">Workspace Limit</dt>

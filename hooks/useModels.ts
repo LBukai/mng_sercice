@@ -18,6 +18,7 @@ export const useModels = () => {
       setIsLoading(true);
       setError(null);
       const data = await getModels();
+      console.log(data)
       setModels(data);
       return data;
     } catch (err) {
@@ -115,19 +116,7 @@ export const useModels = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/models/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(modelData),
-      });
-
-      if (!response.ok) {
-        await handleApiError(response, 'Failed to update model');
-      }
-
-      const updatedModel = await response.json();
+      const updatedModel = await updateModelApi(id, modelData);
       
       setModels(prev => 
         prev.map(model => model.id === id ? { ...model, ...updatedModel } : model)

@@ -238,7 +238,7 @@ export const WorkspaceForm = ({
                 <option value="">Select a model</option>
                 {projectModels.map((model) => (
                   <option key={model.id} value={String(model.id)}>
-                    {model.name} ({model.provider})
+                    {model.name} ({model.provider?.name || 'Unknown Provider'})
                   </option>
                 ))}
               </select>
