@@ -76,11 +76,49 @@ export const useWorkspaces = () => {
     }
   }, [showAlert]);
 
+  const updateWorkspaceModel = useCallback(async (id: string, modelId: number) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const res = await fetch(`/api/workspaces/${id}/model`, { 
+        method: 'PATCH', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: modelId }) 
+      });
+      
+      if (!res.ok) {
+        await handleApiError(res, 'Failed to update workspace model');
+      }
+      
+      const data = await res.json();
+      showAlert('success', 'Workspace model updated successfully');
+      return data;
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        if (err.status !== 401 && err.status !== 403) {
+          showAlert('error', `Failed to update workspace model: ${err.message}`);
+        }
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        setError(errorMessage);
+        showAlert('error', `Failed to update workspace model: ${errorMessage}`);
+      }
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showAlert]);
+
   return {
     workspaces,
     isLoading,
     error,
     getWorkspaceById,
     updateWorkspace,
+    updateWorkspaceModel,
   };
 };

@@ -3,6 +3,7 @@ export interface Workspace {
   name: string;
   slug?: string;
   project?: string;
+  project_id?: string;
   prompt?: string;
   temperature?: number;
   model?: {

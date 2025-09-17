@@ -26,7 +26,7 @@ export const AddWorkspaceFilesForm = ({
     const fetchProjectFiles = async () => {
       
       // First try to get the project ID from the workspace
-      let projectId = workspace.project;
+      let projectId = workspace.project_id;
       
       // If workspace.project is not available, try to fetch it from the workspace details
       if (!projectId && workspace.id) {

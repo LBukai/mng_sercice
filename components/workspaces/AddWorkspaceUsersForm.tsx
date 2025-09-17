@@ -27,7 +27,7 @@ export const AddWorkspaceUsersForm = ({
     const fetchProjectUsers = async () => {
       
       // First try to get the project ID from the workspace
-      let projectId = workspace.project;
+      let projectId = workspace.project_id;
       
       // If workspace.project is not available, try to fetch it from the workspace details
       if (!projectId && workspace.id) {
@@ -39,17 +39,6 @@ export const AddWorkspaceUsersForm = ({
           }
         } catch (err) {
           console.error('Failed to fetch workspace details:', err);
-        }
-      }
-      
-      // If still no project ID, we need to find another way
-      // Let's check if we came from a project page and can get it from the URL or context
-      if (!projectId) {
-        // Try to get project ID from the current URL or referrer
-        const urlParams = new URLSearchParams(window.location.search);
-        const projectFromUrl = urlParams.get('project') || urlParams.get('projectId');
-        if (projectFromUrl) {
-          projectId = projectFromUrl;
         }
       }
       

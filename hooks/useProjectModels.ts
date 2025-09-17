@@ -11,6 +11,7 @@ export const useProjectModels = (projectId: string) => {
   const { showAlert } = useAlert();
 
   const fetchProjectModels = useCallback(async () => {
+    console.log("Hello fetch", projectId)
     if (!projectId) return [];
     
     try {
@@ -18,7 +19,6 @@ export const useProjectModels = (projectId: string) => {
       setError(null);
       
       const res = await fetch(`/api/projects/${projectId}/models`);
-      
       if (!res.ok) {
         await handleApiError(res, 'Failed to load project models');
       }

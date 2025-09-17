@@ -1,31 +1,38 @@
 import { useState } from 'react';
 import { Workspace } from '@/types/workspace';
+import { Model } from '@/types/model';
 
 interface WorkspaceSettingsFormProps {
   workspace: Workspace;
+  projectModels: Model[];
   onUpdate: (updatedWorkspace: Workspace) => Promise<boolean>;
+  onUpdateModel?: (modelId: number) => Promise<boolean>;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
 export const WorkspaceSettingsForm = ({ 
   workspace, 
+  projectModels,
   onUpdate, 
+  onUpdateModel,
   onCancel, 
   isLoading = false 
 }: WorkspaceSettingsFormProps) => {
   const [formData, setFormData] = useState({
     prompt: workspace.prompt || '',
     temperature: workspace.temperature || 0.7,
+    modelId: workspace.model?.id || null,
   });
   
   const [errors, setErrors] = useState<{
     prompt?: string;
     temperature?: string;
+    model?: string;
   }>({});
 
   const validateForm = () => {
-    const newErrors: { prompt?: string; temperature?: string } = {};
+    const newErrors: { prompt?: string; temperature?: string; model?: string } = {};
     
     if (formData.temperature < 0 || formData.temperature > 2) {
       newErrors.temperature = 'Temperature must be between 0 and 2';
@@ -42,19 +49,38 @@ export const WorkspaceSettingsForm = ({
       return;
     }
 
+    let success = true;
+
+    // Update workspace settings (prompt and temperature)
     const updatedWorkspace = {
       ...workspace,
-      ...formData,
+      prompt: formData.prompt,
+      temperature: formData.temperature,
     };
 
-    await onUpdate(updatedWorkspace);
+    const settingsSuccess = await onUpdate(updatedWorkspace);
+    if (!settingsSuccess) {
+      success = false;
+    }
+
+    // Update model if it changed and onUpdateModel is provided
+    if (onUpdateModel && formData.modelId && formData.modelId !== workspace.model?.id) {
+      const modelSuccess = await onUpdateModel(Number(formData.modelId));
+      if (!modelSuccess) {
+        success = false;
+      }
+    }
+
+    if (success) {
+      // Don't close modal automatically, let parent handle it
+    }
   };
 
-  const handleInputChange = (field: keyof typeof formData, value: string | number) => {
+  const handleInputChange = (field: keyof typeof formData, value: string | number | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error when user starts typing
-    if (errors[field]) {
+    if (errors[field as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
@@ -80,7 +106,7 @@ export const WorkspaceSettingsForm = ({
           <p className="mt-1 text-sm text-red-600">{errors.prompt}</p>
         )}
         <p className="mt-1 text-sm text-gray-500">
-          This prompt will be used to guide the AI`&apos;`s responses in this workspace.
+          This prompt will be used to guide the AI&apos;s responses in this workspace.
         </p>
       </div>
 
@@ -109,6 +135,43 @@ export const WorkspaceSettingsForm = ({
         )}
         <p className="mt-1 text-sm text-gray-500">
           Controls randomness: lower values for more focused responses, higher values for more creative responses.
+        </p>
+      </div>
+
+      {/* Model Selection */}
+      <div>
+        <label htmlFor="modelId" className="block text-sm font-medium text-gray-700 mb-1">
+          Model
+        </label>
+        {projectModels.length === 0 ? (
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">
+              No models are assigned to this project. Please assign models to the project first.
+            </p>
+          </div>
+        ) : (
+          <select
+            id="modelId"
+            value={formData.modelId || ''}
+            onChange={(e) => handleInputChange('modelId', e.target.value ? parseInt(e.target.value, 10) : null)}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.model ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+            }`}
+            disabled={isLoading}
+          >
+            <option value="">Select a model</option>
+            {projectModels.map((model) => (
+              <option key={model.id} value={String(model.id)}>
+                {model.name} ({model.provider?.name || 'Unknown Provider'})
+              </option>
+            ))}
+          </select>
+        )}
+        {errors.model && (
+          <p className="mt-1 text-sm text-red-600">{errors.model}</p>
+        )}
+        <p className="mt-1 text-sm text-gray-500">
+          Choose the AI model for this workspace from the models assigned to the project.
         </p>
       </div>
 

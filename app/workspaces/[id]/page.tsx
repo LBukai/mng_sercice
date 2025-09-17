@@ -11,6 +11,7 @@ import { WorkspaceSettingsForm } from '@/components/workspaces/WorkspaceSettings
 import { useWorkspaceUsers } from '@/hooks/useWorkspaceUsers';
 import { useWorkspaceFiles } from '@/hooks/useWorkspaceFiles';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
+import { useProjectModels } from '@/hooks/useProjectModels';
 import { useAlert } from '@/contexts/AlertContext';
 import { Modal } from '@/components/common/Modal';
 import Link from 'next/link';
@@ -25,7 +26,7 @@ export default function WorkspaceDetailsPage() {
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   
   // Hooks for data management
-  const { isLoading: workspaceLoading, error: workspaceError, getWorkspaceById } = useWorkspaces();
+  const { isLoading: workspaceLoading, error: workspaceError, getWorkspaceById, updateWorkspaceModel } = useWorkspaces();
   const {
     workspaceUsers,
     isLoading: usersLoading,
@@ -44,6 +45,14 @@ export default function WorkspaceDetailsPage() {
     removeFileFromWorkspace
   } = useWorkspaceFiles(workspaceId);
 
+  // Project models hook - we'll get the project ID from the workspace
+  const {
+    projectModels,
+    isLoading: modelsLoading,
+    //error: modelsError,
+    fetchProjectModels,
+  } = useProjectModels(workspace?.project_id || '');
+
   useEffect(() => {
     const fetchData = async () => {
       if (workspaceId) {
@@ -55,13 +64,21 @@ export default function WorkspaceDetailsPage() {
         // Fetch all related data
         await Promise.all([
           fetchWorkspaceUsers(),
-          fetchWorkspaceFiles()
+          fetchWorkspaceFiles(),
         ]);
       }
     };
 
     fetchData();
   }, [workspaceId, getWorkspaceById, fetchWorkspaceUsers, fetchWorkspaceFiles]);
+
+  // Fetch project models when workspace is loaded
+  useEffect(() => {
+    console.log("Hello2",workspace?.project_id);
+    if (workspace?.project_id) {
+      fetchProjectModels();
+    }
+  }, [workspace, fetchProjectModels]);
 
   const handleUpdateSettings = async (updatedWorkspace: Workspace) => {
     setIsUpdatingSettings(true);
@@ -83,7 +100,6 @@ export default function WorkspaceDetailsPage() {
 
       const result = await response.json();
       setWorkspace(result);
-      setShowSettingsModal(false);
       showAlert('success', 'Workspace settings updated successfully');
       return true;
     } catch (err) {
@@ -93,6 +109,30 @@ export default function WorkspaceDetailsPage() {
     } finally {
       setIsUpdatingSettings(false);
     }
+  };
+
+  const handleUpdateModel = async (modelId: number) => {
+    if (!updateWorkspaceModel) {
+      showAlert('error', 'Model update functionality not available');
+      return false;
+    }
+
+    const result = await updateWorkspaceModel(workspaceId, modelId);
+    if (result) {
+      // Update local workspace state with new model info
+      const updatedModel = projectModels.find(model => Number(model.id) === modelId);
+      if (updatedModel) {
+        setWorkspace(prev => prev ? {
+          ...prev,
+          model: {
+            id: Number(updatedModel.id),
+            name: updatedModel.name
+          }
+        } : null);
+      }
+      setShowSettingsModal(false);
+    }
+    return !!result;
   };
 
   return (
@@ -139,6 +179,10 @@ export default function WorkspaceDetailsPage() {
                   <dt className="text-sm font-medium text-gray-500">Workspace ID</dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{workspace.id}</dd>
                 </div>
+                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Project ID</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{workspace.project_id}</dd>
+                </div>
                 <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Workspace Name</dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{workspace.name}</dd>
@@ -149,20 +193,32 @@ export default function WorkspaceDetailsPage() {
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{workspace.slug}</dd>
                   </div>
                 )}
-                {workspace.project && (
+                {workspace.project_id && (
                   <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                     <dt className="text-sm font-medium text-gray-500">Project</dt>
                     <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                       <Link 
-                        href={`/projects/${workspace.project}`}
+                        href={`/projects/${workspace.project_id}`}
                         className="text-blue-600 hover:text-blue-800"
                       >
-                        {workspace.project}
+                        {workspace.project_id}
                       </Link>
                     </dd>
                   </div>
                 )}
                 <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Model</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    {workspace.model ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                        {workspace.model.name} (ID: {workspace.model.id})
+                      </span>
+                    ) : (
+                      <span className="text-gray-500 italic">No model assigned</span>
+                    )}
+                  </dd>
+                </div>
+                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Temperature</dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
@@ -170,7 +226,7 @@ export default function WorkspaceDetailsPage() {
                     </span>
                   </dd>
                 </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">System Prompt</dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                     {workspace.prompt ? (
@@ -182,7 +238,7 @@ export default function WorkspaceDetailsPage() {
                     )}
                   </dd>
                 </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Status</dt>
                   <dd className="mt-1 sm:mt-0 sm:col-span-2">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -225,12 +281,21 @@ export default function WorkspaceDetailsPage() {
             title="Workspace Settings"
             size="md"
           >
-            <WorkspaceSettingsForm 
-              workspace={workspace}
-              onUpdate={handleUpdateSettings}
-              onCancel={() => setShowSettingsModal(false)}
-              isLoading={isUpdatingSettings}
-            />
+            {modelsLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <LoadingSpinner size="lg" />
+                <span className="ml-3">Loading project models...</span>
+              </div>
+            ) : (
+              <WorkspaceSettingsForm 
+                workspace={workspace}
+                projectModels={projectModels}
+                onUpdate={handleUpdateSettings}
+                onUpdateModel={handleUpdateModel}
+                onCancel={() => setShowSettingsModal(false)}
+                isLoading={isUpdatingSettings}
+              />
+            )}
           </Modal>
         </>
       ) : (
